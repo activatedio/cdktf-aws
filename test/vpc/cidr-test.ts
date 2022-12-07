@@ -1,17 +1,14 @@
-import { CIDR } from "../cidr"
+import {CIDR} from '../../src/vpc/cidr';
 
-describe("CIDR", () => {
-
-  it("disallows invalid input", () =>{
-
+describe('CIDR', () => {
+  it('disallows invalid input', () => {
     try {
-      new CIDR("invalid")
-      fail("should have raised error")
+      new CIDR('invalid');
+      fail('should have raised error');
     } catch (e) {
-      expect(e).toEqual(new Error("invalid cidr invalid"))
+      expect(e).toEqual(new Error('invalid cidr invalid'));
     }
-
-  })
+  });
 
   /*
   it("disallows invalid numbers", () =>{
@@ -35,5 +32,4 @@ describe("CIDR", () => {
 
   })
   */
-
-})
+});
