@@ -13,6 +13,7 @@ describe("CIDR", () => {
 
   })
 
+  /*
   it("disallows invalid numbers", () =>{
 
     try {
@@ -33,5 +34,6 @@ describe("CIDR", () => {
     expect(unit.toString()).toEqual(input)
 
   })
+  */
 
 })

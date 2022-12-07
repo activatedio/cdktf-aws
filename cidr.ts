@@ -6,7 +6,6 @@ class CIDR {
 
     constructor (cidr: string) {
 
-        
 
         const regexp = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})\/(\d{1,2})$/
         const match = cidr.match(regexp)

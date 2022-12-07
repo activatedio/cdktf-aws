@@ -1,11 +1,14 @@
 {
-  "name": "cdktf-aws",
+  "name": "@activatedio/cdktf-aws",
   "version": "0.0.1",
   "description": "TypeScript library for CDKTF for AWS",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc"
+    "prepublish": "tsc",
+    "build": "tsc",
+    "test": "jest",
+    "test:watch": "jest --watch"
   },
   "repository": {
     "type": "git",
