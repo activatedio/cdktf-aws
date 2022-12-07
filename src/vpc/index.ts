@@ -1,3 +1,3 @@
-import {Vpc} from './vpc';
+import {Vpc, VpcProps} from './vpc';
 
-export {Vpc};
+export {Vpc, VpcProps};
