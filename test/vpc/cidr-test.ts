@@ -10,10 +10,6 @@ describe('CIDR', () => {
     }
   });
 
-  it('is valid', () => {
-    const unit = createCIDR('10.10.0.0/26');
-  });
-
   it('disallows invalid numbers', () => {
     try {
       createCIDR('256.256.256.256/33');
@@ -28,7 +24,7 @@ describe('CIDR', () => {
       createCIDR('192.168.1.0/16');
       fail('should have raised error');
     } catch (e) {
-      expect(e).toEqual(new Error('invalid cidr 192.168.1.0/16'));
+      expect(e).toEqual(new Error('invalid cidr'));
     }
   });
 
@@ -50,5 +46,16 @@ describe('CIDR', () => {
     const next = unit.next();
 
     expect(next.toCidrString()).toEqual('192.168.1.64/26');
+  });
+
+  it('add octet', () => {
+    const input = '10.1.0.0/16';
+
+    const unit = createCIDR(input);
+
+    const added = unit.addOctet(2, 3, 24);
+
+    expect(unit.toCidrString()).toEqual('10.1.0.0/16');
+    expect(added.toCidrString()).toEqual('10.1.3.0/24');
   });
 });

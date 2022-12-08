@@ -12,8 +12,6 @@ class CIDR {
       throw new Error('invalid cidr ' + cidr);
     }
 
-    console.log(match);
-
     for (let i = 0; i < 4; i++) {
       const part = parseInt(match[i + 1]);
 
@@ -24,11 +22,36 @@ class CIDR {
       this.value = this.value + part * this.factors[i];
     }
 
-    this.mask = 32 - parseInt(match[5]);
+    this.setMask(parseInt(match[5]));
 
+    this.validate();
+  }
+
+  private setMask(mask: number) {
+    this.mask = 32 - mask;
+  }
+
+  private validate() {
     if (this.value % Math.pow(2, this.mask) !== 0) {
-      throw new Error('invalid cidr ' + cidr);
+      throw new Error('invalid cidr');
     }
+  }
+
+  addOctet(index: number, value: number, mask: number): CIDR {
+    if (index < 0 || index > 3) {
+      throw new Error('invalid index');
+    }
+
+    const _addend = value * this.factors[index];
+
+    const result = new CIDR();
+
+    result.value = this.value + _addend;
+    result.setMask(mask);
+
+    result.validate();
+
+    return result;
   }
 
   toCidrString(): string {
@@ -50,6 +73,8 @@ class CIDR {
 
     result.value = this.value + Math.pow(2, this.mask);
     result.mask = this.mask;
+
+    result.validate();
 
     return result;
   }
