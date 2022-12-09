@@ -11,7 +11,10 @@ interface SubnetPrototypeProps {
   routeTableId?: string;
 }
 
-interface RouteTablePrototypeProps {}
+interface RouteTablePrototypeProps {
+  routes?: aws.routeTable.RouteTableRoute[]
+  count?: number
+}
 
 interface VpcProps {
   cidr: string;
@@ -21,10 +24,29 @@ interface VpcProps {
   tags: Tags;
 }
 
+interface RouteProps {
+
+    readonly carrierGatewayId?: string;
+    readonly coreNetworkArn?: string;
+    readonly destinationCidrBlock?: string;
+    readonly destinationIpv6CidrBlock?: string;
+    readonly destinationPrefixListId?: string;
+    readonly egressOnlyGatewayId?: string;
+    readonly gatewayId?: string;
+    readonly instanceId?: string;
+    readonly localGatewayId?: string;
+    readonly natGatewayId?: string;
+    readonly networkInterfaceId?: string;
+    readonly transitGatewayId?: string;
+    readonly vpcEndpointId?: string;
+    readonly vpcPeeringConnectionId?: string;
+}
+
 class Vpc extends Construct {
+
   public vpc: aws.vpc.Vpc;
   public subnets: {[key: string]: aws.subnet.Subnet[]} = {};
-  public routeTables: {[key: string]: aws.routeTable.RouteTable} = {};
+  public routeTables: {[key: string]: aws.routeTable.RouteTable[]} = {};
 
   constructor(scope: Construct, id: string, props: VpcProps) {
     super(scope, id);
@@ -37,12 +59,21 @@ class Vpc extends Construct {
     });
 
     for (const name in props.routeTablePrototypes) {
-      const routeTable = new aws.routeTable.RouteTable(this, `rt-${name}`, {
-        vpcId: this.vpc.id,
-        tags: props.tags.withName(name).getTags(),
-      });
 
-      this.routeTables[name] = routeTable;
+      const rtProps = props.routeTablePrototypes[name]
+      const rtCount = rtProps.count ? rtProps.count : props.availabilityZones.length
+
+      const routeTables: aws.routeTable.RouteTable[] = []
+
+      for (let i = 0; i < rtCount; i++) {
+        routeTables.push(new aws.routeTable.RouteTable(this, `rt-${name}-${i}`, {
+          vpcId: this.vpc.id,
+          route: rtProps.routes,
+          tags: props.tags.withName(`${name}-${i}`).getTags(),
+        }));
+      }
+
+      this.routeTables[name] = routeTables;
     }
 
     for (const name in props.subnetPrototypes) {
@@ -69,7 +100,8 @@ class Vpc extends Construct {
         let routeTableId: string | undefined;
 
         if (subnetProps.routeTableName) {
-          routeTableId = this.routeTables[subnetProps.routeTableName].id;
+          var routeTables = this.routeTables[subnetProps.routeTableName] 
+          routeTableId = routeTables[i % routeTables.length].id;
         } else if (subnetProps.routeTableId) {
           routeTableId = subnetProps.routeTableId;
         }
@@ -90,6 +122,14 @@ class Vpc extends Construct {
 
       this.subnets[name] = subnets;
     }
+  }
+
+  public addRoute(routeTableName: string, index: number, id: string, routeProps: RouteProps) {
+
+    const routeTables = this.routeTables[routeTableName]
+    const _index = index % routeTables.length
+
+    new aws.route.Route(this, `r-${routeTableName}-${id}-${index}`, { routeTableId: routeTables[_index].id, ...routeProps})
   }
 }
 
