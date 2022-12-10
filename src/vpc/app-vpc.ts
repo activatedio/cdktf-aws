@@ -1,7 +1,6 @@
 import {Construct} from 'constructs';
 import * as aws from '@cdktf/provider-aws';
 import {Tags} from '../tags';
-import {ZonePair} from '../zonepair';
 import {createCIDR} from './cidr';
 import {SubnetPrototypeProps, Vpc, RouteTablePrototypeProps} from './vpc';
 
@@ -34,14 +33,11 @@ interface AppVpcProps {
  *  - data - x.x.48.0/22
  */
 
-const DATA = 'data';
-const SERVICE = 'service';
 const PUBLIC = 'public';
 
 class AppVpc extends Vpc {
-
   public networkAcls: {[key: string]: aws.networkAcl.NetworkAcl} = {};
-  public internetGateway: aws.internetGateway.InternetGateway
+  public internetGateway: aws.internetGateway.InternetGateway;
   public natGateways: aws.natGateway.NatGateway[] = [];
 
   constructor(scope: Construct, id: string, props: AppVpcProps) {
@@ -83,8 +79,7 @@ class AppVpc extends Vpc {
         noEgress: {
           count: 1,
         },
-        natEgress: {
-        },
+        natEgress: {},
         igwEgress: {
           count: 1,
         },
@@ -92,56 +87,57 @@ class AppVpc extends Vpc {
       },
     });
 
-      this.internetGateway = new aws.internetGateway.InternetGateway(this, 'igw-main', {
+    this.internetGateway = new aws.internetGateway.InternetGateway(
+      this,
+      'igw-main',
+      {
         vpcId: this.vpc.id,
         tags: props.tags.withName('Name').getTags(),
+      }
+    );
+
+    for (let i = 0; i < this.subnets[PUBLIC].length; i++) {
+      const subnet = this.subnets[PUBLIC][i];
+
+      const eip = new aws.eip.Eip(this, `eip-ngw-main-${i}`, {
+        tags: props.tags.withName(`NGW ${i}`).getTags(),
       });
 
-      for (let i = 0; i < this.subnets[PUBLIC].length; i++) {
+      const ngw = new aws.natGateway.NatGateway(this, `ngw-main-${i}`, {
+        allocationId: eip.allocationId,
+        subnetId: subnet.id,
+        tags: props.tags.withName(`Main ${i}`).getTags(),
+      });
 
-        const subnet = this.subnets[PUBLIC][i];
+      this.addRoute('natEgress', i, 'egress-gw', {
+        destinationCidrBlock: '0.0.0.0/0',
+        natGatewayId: ngw.id,
+      });
 
-        const eip = new aws.eip.Eip(this, `eip-ngw-main-${i}`, {
-          tags: props.tags.withName(`NGW ${i}`).getTags(),
-        });
+      this.natGateways.push(ngw);
+    }
 
-        const ngw = new aws.natGateway.NatGateway(this, `ngw-main-${i}`, {
-          allocationId: eip.allocationId,
-          subnetId: subnet.id,
-          tags: props.tags.withName(`Main ${i}`).getTags(),
-        });
-
-        this.addRoute("natEgress", i, "egress-gw", {
-          destinationCidrBlock: "0.0.0.0/0",
-          natGatewayId: ngw.id,
-        })
-
-        this.natGateways.push(ngw)
-
-      }
-
-      this.addRoute("igwEgress", 0, "egress-gw", {
-        destinationCidrBlock: "0.0.0.0/0",
-        gatewayId: this.internetGateway.id,
-      })
+    this.addRoute('igwEgress', 0, 'egress-gw', {
+      destinationCidrBlock: '0.0.0.0/0',
+      gatewayId: this.internetGateway.id,
+    });
 
     // Now we create network access groups for each
     for (const name in this.subnets) {
-
       const subnets = this.subnets[name];
 
-      let egress: aws.networkAcl.NetworkAclEgress[] | undefined
-      let ingress: aws.networkAcl.NetworkAclIngress[] | undefined
+      let egress: aws.networkAcl.NetworkAclEgress[] | undefined;
+      let ingress: aws.networkAcl.NetworkAclIngress[] | undefined;
 
       if (props.networkAcls) {
         const aclProps = props.networkAcls[name];
         if (aclProps) {
-          egress = aclProps.egress
-          ingress = aclProps.ingress
+          egress = aclProps.egress;
+          ingress = aclProps.ingress;
         }
       }
 
-      const acl = new aws.networkAcl.NetworkAcl(this, `acl-${name}`, {
+      new aws.networkAcl.NetworkAcl(this, `acl-${name}`, {
         vpcId: this.vpc.id,
         subnetIds: subnets.map(s => s.id),
         tags: props.tags.withName(name).getTags(),
