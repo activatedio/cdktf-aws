@@ -3,6 +3,7 @@ import * as tls from '@cdktf/provider-tls';
 import * as aws from '@cdktf/provider-aws';
 
 interface SignedCertProps {
+  privateKeyPem: string;
   organizationName: string;
   commonName: string;
   caPrivateKeyPem: string;
@@ -11,25 +12,22 @@ interface SignedCertProps {
 }
 
 class SignedCert extends Construct {
-  public privateKey: tls.privateKey.PrivateKey;
-  public cert: aws.acmCertificate.AcmCertificate;
+
+  public cert: tls.locallySignedCert.LocallySignedCert;
+  public acmCertificate: aws.acmCertificate.AcmCertificate;
 
   constructor(scope: Construct, id: string, props: SignedCertProps) {
     super(scope, id);
 
-    this.privateKey = new tls.privateKey.PrivateKey(this, 'private', {
-      algorithm: 'RSA',
-    });
-
     const cr = new tls.certRequest.CertRequest(this, 'cr', {
-      privateKeyPem: this.privateKey.privateKeyPem,
+      privateKeyPem: props.privateKeyPem,
       subject: {
         commonName: props.commonName,
         organization: props.organizationName,
       },
     });
 
-    const lsc = new tls.locallySignedCert.LocallySignedCert(this, 'lsc', {
+    this.cert = new tls.locallySignedCert.LocallySignedCert(this, 'lsc', {
       certRequestPem: cr.certRequestPem,
       caPrivateKeyPem: props.caPrivateKeyPem,
       caCertPem: props.caCertPem,
@@ -37,9 +35,9 @@ class SignedCert extends Construct {
       allowedUses: ['key_encipherment', 'digital_signature', props.usage],
     });
 
-    this.cert = new aws.acmCertificate.AcmCertificate(this, 'root', {
-      privateKey: this.privateKey.privateKeyPem,
-      certificateBody: lsc.certPem,
+    this.acmCertificate = new aws.acmCertificate.AcmCertificate(this, 'root', {
+      privateKey: props.privateKeyPem,
+      certificateBody: this.cert.certPem,
       certificateChain: props.caCertPem,
     });
   }

@@ -3,24 +3,21 @@ import * as tls from '@cdktf/provider-tls';
 import * as aws from '@cdktf/provider-aws';
 
 interface CAProps {
+  privateKeyPem: string,
   organizatoinName: string;
   commonName: string;
 }
 
 class CA extends Construct {
-  public privateKey: tls.privateKey.PrivateKey;
+
   public selfSignedCert: tls.selfSignedCert.SelfSignedCert;
   public ca: aws.acmCertificate.AcmCertificate;
 
   constructor(scope: Construct, id: string, props: CAProps) {
     super(scope, id);
 
-    this.privateKey = new tls.privateKey.PrivateKey(this, 'private', {
-      algorithm: 'RSA',
-    });
-
     this.selfSignedCert = new tls.selfSignedCert.SelfSignedCert(this, 'ssc', {
-      privateKeyPem: this.privateKey.privateKeyPem,
+      privateKeyPem: props.privateKeyPem,
       subject: {
         commonName: props.commonName,
         organization: props.organizatoinName,
@@ -31,7 +28,7 @@ class CA extends Construct {
     });
 
     this.ca = new aws.acmCertificate.AcmCertificate(this, 'ca', {
-      privateKey: this.privateKey.privateKeyPem,
+      privateKey: props.privateKeyPem,
       certificateBody: this.selfSignedCert.certPem,
     });
   }
