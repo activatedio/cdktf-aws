@@ -9,6 +9,7 @@ interface SubnetPrototypeProps {
   routeTableName?: string;
   // If set, will associate the given route table to the subnet
   routeTableId?: string;
+  tags?: {[key: string]: string};
 }
 
 interface RouteTablePrototypeProps {
@@ -90,12 +91,17 @@ class Vpc extends Construct {
         }
 
         const _name = `${id}-${name}-${i}`;
+        let _tags = props.tags.withName(_name);
+
+        if (subnetProps.tags) {
+          _tags = _tags.withTags(subnetProps.tags);
+        }
 
         const subnet = new aws.subnet.Subnet(this, _name, {
           vpcId: this.vpc.id,
           cidrBlock: cidr.toCidrString(),
           availabilityZone: props.availabilityZones[i],
-          tags: props.tags.withName(_name).getTags(),
+          tags: _tags.getTags(),
         });
 
         let routeTableId: string | undefined;

@@ -3,13 +3,12 @@ import * as tls from '@cdktf/provider-tls';
 import * as aws from '@cdktf/provider-aws';
 
 interface CAProps {
-  privateKeyPem: string,
+  privateKeyPem: string;
   organizatoinName: string;
   commonName: string;
 }
 
 class CA extends Construct {
-
   public selfSignedCert: tls.selfSignedCert.SelfSignedCert;
   public ca: aws.acmCertificate.AcmCertificate;
 

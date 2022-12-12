@@ -12,7 +12,6 @@ interface SignedCertProps {
 }
 
 class SignedCert extends Construct {
-
   public cert: tls.locallySignedCert.LocallySignedCert;
   public acmCertificate: aws.acmCertificate.AcmCertificate;
 

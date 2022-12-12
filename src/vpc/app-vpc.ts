@@ -18,6 +18,8 @@ interface AppVpcProps {
   extraSubnetPrototypes?: {[key: string]: SubnetPrototypeProps};
   extraRouteTablePrototypes?: {[key: string]: RouteTablePrototypeProps};
   networkAcls?: {[key: string]: SubnetAclProps};
+  serviceSubnetTags: {[key: string]: string};
+  publicSubnetTags: {[key: string]: string};
   tags: Tags;
 }
 
@@ -29,8 +31,8 @@ interface AppVpcProps {
  *
  * Subnets are created with the following logic
  *  - data - x.x.0.0/22
- *  - data - x.x.24.0/22
- *  - data - x.x.48.0/22
+ *  - service - x.x.24.0/22
+ *  - ingress - x.x.48.0/22
  */
 
 const PUBLIC = 'public';
@@ -59,10 +61,12 @@ class AppVpc extends Vpc {
       service: {
         zeroCidr: servicesCidr.toCidrString(),
         routeTableName: 'natEgress',
+        tags: props.serviceSubnetTags,
       },
       public: {
         zeroCidr: publicCidr.toCidrString(),
         routeTableName: 'igwEgress',
+        tags: props.publicSubnetTags,
       },
     };
 
