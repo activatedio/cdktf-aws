@@ -22,7 +22,7 @@ interface ClusterProps {
   subnetIds: string[];
   // CIDR Blocks which can access the cluster for management
   accessCidrs: string[];
-  nodeGroups: NodeGroupProps[];
+  nodeGroups?: NodeGroupProps[];
   includeFargateProfile?: boolean;
   fargateSelectors?: FargateSelectorProps[];
   tags: Tags;
@@ -94,8 +94,10 @@ class Cluster extends Construct {
       dependsOn: [clusterRole, clusterRoleAttachment],
     });
 
+    const oidcIssuer = this.cluster.identity.get(0).oidc.get(0).issuer;
+
     const tlsCert = new tls.dataTlsCertificate.DataTlsCertificate(this, 'tls', {
-      url: this.cluster.identity.get(0).oidc.get(0).issuer,
+      url: oidcIssuer,
     });
 
     const provider = new aws.iamOpenidConnectProvider.IamOpenidConnectProvider(
@@ -184,31 +186,33 @@ class Cluster extends Construct {
       );
     }
 
-    for (let i = 0; i < props.nodeGroups.length; i++) {
-      const nodeGroupProps = props.nodeGroups[i];
+    if (props.nodeGroups) {
+      for (let i = 0; i < props.nodeGroups.length; i++) {
+        const nodeGroupProps = props.nodeGroups[i];
 
-      new aws.eksNodeGroup.EksNodeGroup(this, `nodeGroup-${i}`, {
-        clusterName: this.cluster.name,
-        nodeGroupName: nodeGroupProps.name,
-        nodeRoleArn: nodeGroupRole.arn,
-        subnetIds: props.subnetIds,
-        instanceTypes: nodeGroupProps.instanceTypes,
-        capacityType: nodeGroupProps.capacityType,
+        new aws.eksNodeGroup.EksNodeGroup(this, `nodeGroup-${i}`, {
+          clusterName: this.cluster.name,
+          nodeGroupName: nodeGroupProps.name,
+          nodeRoleArn: nodeGroupRole.arn,
+          subnetIds: props.subnetIds,
+          instanceTypes: nodeGroupProps.instanceTypes,
+          capacityType: nodeGroupProps.capacityType,
 
-        scalingConfig: {
-          desiredSize: nodeGroupProps.desiredSize,
-          maxSize: nodeGroupProps.maxSize,
-          minSize: nodeGroupProps.minSize,
-        },
+          scalingConfig: {
+            desiredSize: nodeGroupProps.desiredSize,
+            maxSize: nodeGroupProps.maxSize,
+            minSize: nodeGroupProps.minSize,
+          },
 
-        updateConfig: {
-          maxUnavailable: 1,
-        },
+          updateConfig: {
+            maxUnavailable: 1,
+          },
 
-        lifecycle: {
-          ignoreChanges: ['scaling_config[0].desired_size'],
-        },
-      });
+          lifecycle: {
+            ignoreChanges: ['scaling_config[0].desired_size'],
+          },
+        });
+      }
     }
 
     if (props.includeFargateProfile) {

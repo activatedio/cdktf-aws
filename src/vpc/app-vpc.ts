@@ -18,8 +18,8 @@ interface AppVpcProps {
   extraSubnetPrototypes?: {[key: string]: SubnetPrototypeProps};
   extraRouteTablePrototypes?: {[key: string]: RouteTablePrototypeProps};
   networkAcls?: {[key: string]: SubnetAclProps};
-  serviceSubnetTags: {[key: string]: string};
-  publicSubnetTags: {[key: string]: string};
+  serviceSubnetTags?: {[key: string]: string};
+  publicSubnetTags?: {[key: string]: string};
   tags: Tags;
 }
 
