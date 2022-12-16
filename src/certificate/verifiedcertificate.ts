@@ -7,7 +7,7 @@ interface VerifiedCertificateProps {
   subjectAlternativeNames?: string[];
   zoneId: string;
   domainName: string;
-  certificateProvider?: TerraformProvider;
+  certificateProvider?: aws.provider.AwsProvider;
   tags: Tags;
 }
 
