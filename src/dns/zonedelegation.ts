@@ -7,7 +7,6 @@ interface ZoneDelegationProps {
    * Must be a subdomain of the parent zone
    */
   delegatedZone: string;
-  privateZone?: boolean;
 }
 
 /**
@@ -31,7 +30,6 @@ class ZoneDelegation extends Construct {
       'parentZone',
       {
         name: props.parentZone,
-        privateZone: props.privateZone,
       }
     );
 
@@ -40,7 +38,6 @@ class ZoneDelegation extends Construct {
       'delegatedZone',
       {
         name: props.delegatedZone,
-        privateZone: props.privateZone,
       }
     );
 

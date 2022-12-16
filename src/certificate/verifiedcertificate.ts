@@ -1,14 +1,13 @@
 import {Construct} from 'constructs';
 import * as aws from '@cdktf/provider-aws';
-import {TerraformProvider} from 'cdktf';
 import {Tags} from '../tags';
 
 interface VerifiedCertificateProps {
-  subjectAlternativeNames?: string[];
   zoneId: string;
   domainName: string;
   certificateProvider?: aws.provider.AwsProvider;
   tags: Tags;
+  subjectAlternativeNames?: string[];
 }
 
 class VerifiedCertificate extends Construct {
@@ -37,6 +36,28 @@ class VerifiedCertificate extends Construct {
         createBeforeDestroy: false,
       },
     });
+
+    if (props.subjectAlternativeNames) {
+      for (let i = 0; i < props.subjectAlternativeNames.length; i++) {
+        const name = props.subjectAlternativeNames[i];
+        const index = i + 1;
+        new aws.route53Record.Route53Record(this, `recordAlt-${i}`, {
+          zoneId: props.zoneId,
+          name: this.certificate.domainValidationOptions.get(index)
+            .resourceRecordName,
+          type: this.certificate.domainValidationOptions.get(index)
+            .resourceRecordType,
+          ttl: 300,
+          records: [
+            this.certificate.domainValidationOptions.get(index)
+              .resourceRecordValue,
+          ],
+          lifecycle: {
+            createBeforeDestroy: false,
+          },
+        });
+      }
+    }
   }
 }
 
