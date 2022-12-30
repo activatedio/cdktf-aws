@@ -25,6 +25,8 @@ interface AllInWebsiteProps {
 }
 
 class AllInWebsite extends Construct {
+  public readonly staticWebsite: StaticWebsite;
+
   constructor(scope: Construct, id: string, props: AllInWebsiteProps) {
     super(scope, id);
 
@@ -55,7 +57,7 @@ class AllInWebsite extends Construct {
       };
     }
 
-    const website = new StaticWebsite(this, `website-${id}`, {
+    this.staticWebsite = new StaticWebsite(this, `website-${id}`, {
       aliases: props.aliases,
       tags: props.tags,
       viewerCertificate: viewerCert,
@@ -80,8 +82,8 @@ class AllInWebsite extends Construct {
           name: host.name,
           alias: [
             {
-              zoneId: website.distribution.hostedZoneId,
-              name: website.distribution.domainName,
+              zoneId: this.staticWebsite.distribution.hostedZoneId,
+              name: this.staticWebsite.distribution.domainName,
               evaluateTargetHealth: false,
             },
           ],
