@@ -5,13 +5,12 @@ import {StaticWebsite} from './staticwebsite';
 import {VerifiedCertificate} from '../certificate';
 
 interface AllInResolutionHostname {
-  zoneName: string;
-  zonePrivate: boolean;
+  zoneId: string;
   name: string;
 }
 
 interface AllInCertificate {
-  zoneName: string;
+  zoneId: string;
   domainName: string;
   alternativeNames?: string[];
 }
@@ -35,18 +34,10 @@ class AllInWebsite extends Construct {
       | undefined;
 
     if (props.certificate) {
-      const zone = new aws.dataAwsRoute53Zone.DataAwsRoute53Zone(
-        this,
-        'dataCertZone',
-        {
-          name: props.certificate.zoneName,
-        }
-      );
-
       const cert = new VerifiedCertificate(this, 'cert', {
         domainName: props.certificate.domainName,
         subjectAlternativeNames: props.certificate.alternativeNames,
-        zoneId: zone.id,
+        zoneId: props.certificate.zoneId,
         certificateProvider: props.certificateProvider,
         tags: props.tags,
       });
@@ -57,7 +48,7 @@ class AllInWebsite extends Construct {
       };
     }
 
-    this.staticWebsite = new StaticWebsite(this, `website-${id}`, {
+    this.staticWebsite = new StaticWebsite(this, id, {
       aliases: props.aliases,
       tags: props.tags,
       viewerCertificate: viewerCert,
@@ -67,17 +58,8 @@ class AllInWebsite extends Construct {
       for (let i = 0; i < props.resolutionHostnames.length; i++) {
         const host = props.resolutionHostnames[i];
 
-        const zone = new aws.dataAwsRoute53Zone.DataAwsRoute53Zone(
-          this,
-          `resolutionZone-${i}`,
-          {
-            name: host.zoneName,
-            privateZone: host.zonePrivate,
-          }
-        );
-
         new aws.route53Record.Route53Record(this, `resolutionRecord-${i}`, {
-          zoneId: zone.id,
+          zoneId: host.zoneId,
           type: 'A',
           name: host.name,
           alias: [

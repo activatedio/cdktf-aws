@@ -76,6 +76,7 @@ class WebsiteBucket extends Construct {
 
 class StaticWebsite extends Construct {
   public distribution: aws.cloudfrontDistribution.CloudfrontDistribution;
+  public sourceBucket: WebsiteBucket;
 
   constructor(scope: Construct, id: string, props: StaticWebsiteProps) {
     super(scope, id);
@@ -91,7 +92,7 @@ class StaticWebsite extends Construct {
       acl: 'log-delivery-write',
     });
 
-    const sourceBucket = new WebsiteBucket(this, 'sourceBucket', {
+    this.sourceBucket = new WebsiteBucket(this, 'sourceBucket', {
       bucketConfig: {
         bucketPrefix: sourceName,
         logging: {
@@ -111,7 +112,7 @@ class StaticWebsite extends Construct {
       );
 
     new aws.s3BucketPolicy.S3BucketPolicy(this, 'bucketPolicy', {
-      bucket: sourceBucket.bucket.id,
+      bucket: this.sourceBucket.bucket.id,
       policy: `{
         "Version": "2012-10-17",
         "Statement": [
@@ -124,7 +125,7 @@ class StaticWebsite extends Construct {
                 "Action": [
                     "s3:GetObject"
                 ],
-                "Resource": "${sourceBucket.bucket.arn}/*"
+                "Resource": "${this.sourceBucket.bucket.arn}/*"
             }
         ]
     }
@@ -180,7 +181,7 @@ class StaticWebsite extends Construct {
         },
         origin: [
           {
-            domainName: sourceBucket.bucket.bucketRegionalDomainName,
+            domainName: this.sourceBucket.bucket.bucketRegionalDomainName,
             originId: 'origin1',
             s3OriginConfig: {
               originAccessIdentity: identity.cloudfrontAccessIdentityPath,
@@ -197,4 +198,4 @@ class StaticWebsite extends Construct {
   }
 }
 
-export {StaticWebsite, StaticWebsiteProps};
+export {StaticWebsite, WebsiteBucket, StaticWebsiteProps};
