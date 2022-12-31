@@ -18,6 +18,7 @@ interface AllInCertificate {
 interface AllInWebsiteProps {
   aliases?: string[];
   resolutionHostnames?: AllInResolutionHostname[];
+  certificateArn?: string;
   certificateProvider?: aws.provider.AwsProvider;
   certificate?: AllInCertificate;
   tags: Tags;
@@ -33,7 +34,12 @@ class AllInWebsite extends Construct {
       | aws.cloudfrontDistribution.CloudfrontDistributionViewerCertificate
       | undefined;
 
-    if (props.certificate) {
+    if (props.certificateArn) {
+      viewerCert = {
+        acmCertificateArn: props.certificateArn,
+        sslSupportMethod: 'sni-only',
+      };
+    } else if (props.certificate) {
       const cert = new VerifiedCertificate(this, 'cert', {
         domainName: props.certificate.domainName,
         subjectAlternativeNames: props.certificate.alternativeNames,
