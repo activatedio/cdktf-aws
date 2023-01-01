@@ -45,20 +45,17 @@ class VerifiedCertificate extends Construct {
         // deduplicate
       });
 
-      created[
-        this.certificate.domainValidationOptions.get(0).resourceRecordName
-      ] = true;
+      created[this.removeWildcard(props.domainName)] = true;
 
       if (props.subjectAlternativeNames) {
         for (let i = 0; i < props.subjectAlternativeNames.length; i++) {
           const index = i + 1;
 
-          if (
-            created[
-              this.certificate.domainValidationOptions.get(index)
-                .resourceRecordName
-            ]
-          ) {
+          const canonical = this.removeWildcard(
+            props.subjectAlternativeNames[i]
+          );
+
+          if (created[canonical]) {
             // deduplicate
             continue;
           }
@@ -79,14 +76,14 @@ class VerifiedCertificate extends Construct {
             },
           });
 
-          created[
-            this.certificate.domainValidationOptions.get(
-              index
-            ).resourceRecordName
-          ] = true;
+          created[canonical] = true;
         }
       }
     }
+  }
+
+  private removeWildcard(input: string): string {
+    return input.replace('*.', '');
   }
 }
 

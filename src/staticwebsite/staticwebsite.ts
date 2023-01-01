@@ -1,7 +1,6 @@
 import {Construct} from 'constructs';
 import * as aws from '@cdktf/provider-aws';
 import {Tags} from '../tags';
-import {DataAwsWafSubscribedRuleGroup} from '@cdktf/provider-aws/lib/data-aws-waf-subscribed-rule-group';
 
 interface StaticWebsiteProps {
   viewerCertificate?: aws.cloudfrontDistribution.CloudfrontDistributionViewerCertificate;
