@@ -21,7 +21,7 @@ interface IamEksRolePolicyProps {
  * Setup IAM objects and roles for AWS ALB Controller
  */
 class IamEksRolePolicy extends Construct {
-  public policy?: aws.iamPolicy.IamPolicy;
+  public policies: aws.iamPolicy.IamPolicy[] = [];
 
   constructor(scope: Construct, id: string, props: IamEksRolePolicyProps) {
     super(scope, id);
@@ -34,11 +34,13 @@ class IamEksRolePolicy extends Construct {
       let policyArn = policy.policyArn;
 
       if (policy.policy) {
-        this.policy = new aws.iamPolicy.IamPolicy(this, `policy-${i}`, {
+        const _policy = new aws.iamPolicy.IamPolicy(this, `policy-${i}`, {
           name: policy.name,
           policy: policy.policy,
         });
-        policyArn = this.policy.arn;
+
+        this.policies.push(_policy);
+        policyArn = _policy.arn;
       }
 
       policyArns.push(policyArn!);
@@ -82,4 +84,4 @@ class IamEksRolePolicy extends Construct {
   }
 }
 
-export {IamEksRolePolicy, IamEksRolePolicyProps};
+export {IamEksRolePolicy, IamEksRolePolicyProps, IamEksRolePolicyPolicyProps};

@@ -1,3 +1,4 @@
+export * as datadog from './datadog';
 export * as vpc from './vpc';
 export * as tags from './tags';
 export * as zonepair from './zonepair';

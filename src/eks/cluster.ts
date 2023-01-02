@@ -29,8 +29,11 @@ interface ClusterProps {
 }
 
 class Cluster extends Construct {
-  public cluster: aws.eksCluster.EksCluster;
-  public federatedRole: aws.iamRole.IamRole;
+  public readonly cluster: aws.eksCluster.EksCluster;
+  public readonly federatedRole: aws.iamRole.IamRole;
+  public readonly fargateRole?: aws.iamRole.IamRole;
+  // Created if fargate is created
+  public readonly logGroup?: aws.cloudwatchLogGroup.CloudwatchLogGroup;
 
   constructor(scope: Construct, id: string, props: ClusterProps) {
     super(scope, id);
@@ -216,7 +219,7 @@ class Cluster extends Construct {
     }
 
     if (props.includeFargateProfile) {
-      const fargateRole = new aws.iamRole.IamRole(this, 'fargateRole', {
+      this.fargateRole = new aws.iamRole.IamRole(this, 'fargateRole', {
         name: `EksFargateProfile_${props.name}`,
         assumeRolePolicy: `
       {
@@ -240,14 +243,14 @@ class Cluster extends Construct {
         {
           policyArn:
             'arn:aws:iam::aws:policy/AmazonEKSFargatePodExecutionRolePolicy',
-          role: fargateRole.name,
+          role: this.fargateRole.name,
         }
       );
 
       new aws.eksFargateProfile.EksFargateProfile(this, 'fargateProfile', {
         clusterName: this.cluster.name,
         fargateProfileName: 'default',
-        podExecutionRoleArn: fargateRole.arn,
+        podExecutionRoleArn: this.fargateRole.arn,
         subnetIds: props.subnetIds,
         selector: props.fargateSelectors!.map(p => {
           return {
@@ -255,6 +258,16 @@ class Cluster extends Construct {
           };
         }),
       });
+
+      this.logGroup = new aws.cloudwatchLogGroup.CloudwatchLogGroup(
+        this,
+        'logGroup',
+        {
+          name: `/eks/cluster/${id}`,
+          retentionInDays: 7,
+          tags: props.tags.getTags(),
+        }
+      );
     }
   }
 }
