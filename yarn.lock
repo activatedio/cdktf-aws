@@ -305,6 +305,11 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
+"@cdktf/provider-archive@^4.0.0":
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/@cdktf/provider-archive/-/provider-archive-4.0.0.tgz#1c620be0896f2087f2ab9b33efd72c7f232e8de5"
+  integrity sha512-64W51FnrIKvNmtnziTKTRsNL18nQMESd7iFU3Y5LSBWnHgvYKEf/ROIk/2m28Zy1u01CP6oilWrmpMdgd/7iwg==
+
 "@cdktf/provider-aws@11.0.5":
   version "11.0.5"
   resolved "https://registry.yarnpkg.com/@cdktf/provider-aws/-/provider-aws-11.0.5.tgz#41268d11384279ab3e7e7682fe5a701ac4ef90a8"

@@ -1,6 +1,8 @@
 import {Construct} from 'constructs';
 import * as aws from '@cdktf/provider-aws';
 import {Tags} from '../tags';
+import {PrivateBucket} from '../s3';
+import {DefaultDocumentFunction} from './functions';
 
 interface StaticWebsiteProps {
   viewerCertificate?: aws.cloudfrontDistribution.CloudfrontDistributionViewerCertificate;
@@ -11,71 +13,10 @@ interface StaticWebsiteProps {
   tags: Tags;
 }
 
-interface PrivateBucketProps {
-  bucketConfig: aws.s3Bucket.S3BucketConfig;
-  acl: string;
-}
-
-class WebsiteBucket extends Construct {
-  public bucket: aws.s3Bucket.S3Bucket;
-
-  constructor(scope: Construct, id: string, props: PrivateBucketProps) {
-    super(scope, id);
-
-    this.bucket = new aws.s3Bucket.S3Bucket(
-      this,
-      `bucket-${id}`,
-      props.bucketConfig
-    );
-
-    new aws.s3BucketPublicAccessBlock.S3BucketPublicAccessBlock(
-      this,
-      `bucketPublicAccessPolicy-${id}`,
-      {
-        bucket: this.bucket.id,
-        blockPublicAcls: true,
-        blockPublicPolicy: true,
-        ignorePublicAcls: true,
-        restrictPublicBuckets: true,
-      }
-    );
-
-    new aws.s3BucketAcl.S3BucketAcl(this, `bucketAcl-${id}`, {
-      bucket: this.bucket.id,
-      acl: props.acl,
-    });
-
-    new aws.s3BucketServerSideEncryptionConfiguration.S3BucketServerSideEncryptionConfigurationA(
-      this,
-      `bucketEnc-${id}`,
-      {
-        bucket: this.bucket.id,
-        rule: [
-          {
-            applyServerSideEncryptionByDefault: {
-              sseAlgorithm: 'AES256',
-            },
-          },
-        ],
-      }
-    );
-
-    new aws.s3BucketVersioning.S3BucketVersioningA(
-      this,
-      `bucketVersioning-${id}`,
-      {
-        bucket: this.bucket.id,
-        versioningConfiguration: {
-          status: 'Enabled',
-        },
-      }
-    );
-  }
-}
-
 class StaticWebsite extends Construct {
   public distribution: aws.cloudfrontDistribution.CloudfrontDistribution;
-  public sourceBucket: WebsiteBucket;
+  public sourceBucket: PrivateBucket;
+  public logsBucket: PrivateBucket;
 
   constructor(scope: Construct, id: string, props: StaticWebsiteProps) {
     super(scope, id);
@@ -83,24 +24,26 @@ class StaticWebsite extends Construct {
     const sourceName = `${id}-source`;
     const logsName = `${id}-logs`;
 
-    const logsBucket = new WebsiteBucket(this, 'logsBucket', {
+    this.logsBucket = new PrivateBucket(this, 'logsBucket', {
       bucketConfig: {
         bucketPrefix: logsName,
         tags: props.tags.withName(logsName).getTags(),
       },
       acl: 'log-delivery-write',
+      enableVersioning: true,
     });
 
-    this.sourceBucket = new WebsiteBucket(this, 'sourceBucket', {
+    this.sourceBucket = new PrivateBucket(this, 'sourceBucket', {
       bucketConfig: {
         bucketPrefix: sourceName,
         logging: {
-          targetBucket: logsBucket.bucket.id,
+          targetBucket: this.logsBucket.bucket.id,
           targetPrefix: 'logs/',
         },
         tags: props.tags.withName(sourceName).getTags(),
       },
       acl: 'private',
+      enableVersioning: true,
     });
 
     const identity =
@@ -148,6 +91,14 @@ class StaticWebsite extends Construct {
             cloudfrontDefaultCertificate: true,
           };
 
+    const defaultDocumentFunction = new DefaultDocumentFunction(
+      this,
+      'defaultFunction',
+      {
+        defaultDocument: 'index.html',
+      }
+    );
+
     this.distribution = new aws.cloudfrontDistribution.CloudfrontDistribution(
       this,
       'distribution',
@@ -159,6 +110,12 @@ class StaticWebsite extends Construct {
           allowedMethods: ['GET', 'HEAD'],
           cachedMethods: ['GET', 'HEAD'],
           compress: true,
+          functionAssociation: [
+            {
+              eventType: 'viewer-request',
+              functionArn: defaultDocumentFunction.function.arn,
+            },
+          ],
           forwardedValues: {
             cookies: {
               forward: 'none',
@@ -175,7 +132,7 @@ class StaticWebsite extends Construct {
         isIpv6Enabled: true,
         loggingConfig: {
           includeCookies: false,
-          bucket: logsBucket.bucket.bucketRegionalDomainName,
+          bucket: this.logsBucket.bucket.bucketRegionalDomainName,
           prefix: 'cloudfront-logs',
         },
         origin: [
@@ -197,4 +154,4 @@ class StaticWebsite extends Construct {
   }
 }
 
-export {StaticWebsite, WebsiteBucket, StaticWebsiteProps};
+export {StaticWebsite, StaticWebsiteProps};

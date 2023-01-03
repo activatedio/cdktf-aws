@@ -37,6 +37,7 @@
     "constructs": "^10.1.182"
   },
   "devDependencies": {
+    "@cdktf/provider-archive": "^4.0.0",
     "@cdktf/provider-aws": "11.0.5",
     "@types/jest": "^29.2.4",
     "@types/node": "^18.11.11",
