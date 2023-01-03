@@ -315,6 +315,11 @@
   resolved "https://registry.yarnpkg.com/@cdktf/provider-aws/-/provider-aws-11.0.5.tgz#41268d11384279ab3e7e7682fe5a701ac4ef90a8"
   integrity sha512-LPRXOdzYqkOtVJBuNU5VM/NS+K2EIMqP3Q7kMnk9ZTHDEV0snLn+eaNfeXEW8afwEOVAu7Ixt3EanpreyhgUNQ==
 
+"@cdktf/provider-random@^4.0.0":
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/@cdktf/provider-random/-/provider-random-4.0.0.tgz#4576fe9e37fc4c0aae982b4f2615c1270e77e2fb"
+  integrity sha512-kbMgVfNR+61+7RGLHRYmx9ons2SpE+oFddzSSxzTmK0tljHQGVhlofzFOcqJYmrq4v0u9vz9/Aw3N3zibVaeuQ==
+
 "@cdktf/provider-tls@^4.0.0":
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/@cdktf/provider-tls/-/provider-tls-4.0.0.tgz#4cc37f302c8030dd06858af6b566f35e61289511"

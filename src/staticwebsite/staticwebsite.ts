@@ -1,5 +1,6 @@
 import {Construct} from 'constructs';
 import * as aws from '@cdktf/provider-aws';
+import * as random from '@cdktf/provider-random';
 import {Tags} from '../tags';
 import {PrivateBucket} from '../s3';
 import {DefaultDocumentFunction} from './functions';
@@ -91,11 +92,23 @@ class StaticWebsite extends Construct {
             cloudfrontDefaultCertificate: true,
           };
 
+    const randomSuffix = new random.stringResource.StringResource(
+      this,
+      'functionSuffix',
+      {
+        lower: true,
+        upper: false,
+        special: false,
+        length: 8,
+      }
+    );
+
     const defaultDocumentFunction = new DefaultDocumentFunction(
       this,
       'defaultFunction',
       {
         defaultDocument: 'index.html',
+        functionSuffix: randomSuffix.result,
       }
     );
 

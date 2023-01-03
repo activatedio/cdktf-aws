@@ -5,6 +5,7 @@ import * as aws from '@cdktf/provider-aws';
 
 interface DefaultDocumentFunctionProps {
   defaultDocument?: string;
+  functionSuffix: string;
 }
 
 /**
@@ -43,7 +44,7 @@ class DefaultDocumentFunction extends Construct {
       this,
       'function',
       {
-        name: 'CloudFrontDefaultDocumentFunction',
+        name: `CloudFrontDefaultDocumentFunction_${props.functionSuffix}`,
         runtime: 'cloudfront-js-1.0',
         comment: 'Redirect to default document',
         publish: true,
