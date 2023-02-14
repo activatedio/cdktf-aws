@@ -35,7 +35,7 @@ class IamEksRolePolicy extends Construct {
 
       if (policy.policy) {
         const _policy = new aws.iamPolicy.IamPolicy(this, `policy-${i}`, {
-          name: policy.name,
+          name: `${props.name}_${policy.name}`,
           policy: policy.policy,
         });
 

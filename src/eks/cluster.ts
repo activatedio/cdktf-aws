@@ -9,6 +9,7 @@ interface NodeGroupProps {
   maxSize: number;
   minSize: number;
   instanceTypes: string[];
+  diskSize?: number;
   capacityType?: string;
 }
 
@@ -199,6 +200,7 @@ class Cluster extends Construct {
           nodeRoleArn: nodeGroupRole.arn,
           subnetIds: props.subnetIds,
           instanceTypes: nodeGroupProps.instanceTypes,
+          diskSize: nodeGroupProps.diskSize,
           capacityType: nodeGroupProps.capacityType,
 
           scalingConfig: {
