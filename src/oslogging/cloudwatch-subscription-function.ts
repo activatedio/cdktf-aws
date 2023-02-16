@@ -1,24 +1,26 @@
-import { Construct } from "constructs";
-import { Tags } from "../tags";
-import * as aws from "@cdktf/provider-aws";
-import { AssetType, TerraformAsset } from "cdktf";
-import path = require("path");
+import {Construct} from 'constructs';
+import {Tags} from '../tags';
+import * as aws from '@cdktf/provider-aws';
+import {AssetType, TerraformAsset} from 'cdktf';
+import path = require('path');
 
 interface CloudwatchSubscriptionFunctionProps {
-    egressCidr: string;
-    vpcId: string,
-    subnetIds: string[],
-    roleArn: string,
-    osEndpoint: string,
-    indexPrefix: string,
-    tags: Tags,
+  egressCidr: string;
+  vpcId: string;
+  subnetIds: string[];
+  roleArn: string;
+  osEndpoint: string;
+  indexPrefix: string;
+  tags: Tags;
 }
 
 class CloudwatchSubscriptionFunction extends Construct {
-
-    constructor(scope: Construct, id: string, props: CloudwatchSubscriptionFunctionProps) {
-
-        super(scope, id)
+  constructor(
+    scope: Construct,
+    id: string,
+    props: CloudwatchSubscriptionFunctionProps
+  ) {
+    super(scope, id);
 
     const securityGroup = new aws.securityGroup.SecurityGroup(
       this,
@@ -38,29 +40,28 @@ class CloudwatchSubscriptionFunction extends Construct {
       }
     );
 
-    const asset = new TerraformAsset(this, "source", {
-        path: path.resolve(__dirname, '"./lambda-forwarder/index.js'),
-        type:  AssetType.ARCHIVE,
-    })
+    const asset = new TerraformAsset(this, 'source', {
+      path: path.resolve(__dirname, '"./lambda-forwarder/index.js'),
+      type: AssetType.ARCHIVE,
+    });
 
-    new aws.lambdaFunction.LambdaFunction(this, "functionDefault", {
-       functionName: `CloudWatchToOpenSearch_${id}`,
-       runtime: 'nodejs16.x',
-       filename: asset.path,
-       role: props.roleArn,
-       environment: {
+    new aws.lambdaFunction.LambdaFunction(this, 'functionDefault', {
+      functionName: `CloudWatchToOpenSearch_${id}`,
+      runtime: 'nodejs16.x',
+      filename: asset.path,
+      role: props.roleArn,
+      environment: {
         variables: {
           OS_ENDPOINT: props.osEndpoint,
           INDEX_PREFIX: props.indexPrefix,
-        }
-       },
-       vpcConfig: {
+        },
+      },
+      vpcConfig: {
         securityGroupIds: [securityGroup.id],
         subnetIds: props.subnetIds,
-       } 
-    })
-
-    }
+      },
+    });
+  }
 }
 
-export { CloudwatchSubscriptionFunction, CloudwatchSubscriptionFunctionProps }
+export {CloudwatchSubscriptionFunction, CloudwatchSubscriptionFunctionProps};
