@@ -7,3 +7,4 @@ export * as eks from './eks';
 export * as certificate from './certificate';
 export * as staticwebsite from './staticwebsite';
 export * as dns from './dns';
+export * as oslogging from './oslogging';

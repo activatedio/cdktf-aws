@@ -33,8 +33,6 @@ class Cluster extends Construct {
   public readonly cluster: aws.eksCluster.EksCluster;
   public readonly federatedRole: aws.iamRole.IamRole;
   public readonly fargateRole?: aws.iamRole.IamRole;
-  // Created if fargate is created
-  public readonly logGroup?: aws.cloudwatchLogGroup.CloudwatchLogGroup;
 
   constructor(scope: Construct, id: string, props: ClusterProps) {
     super(scope, id);
@@ -260,16 +258,6 @@ class Cluster extends Construct {
           };
         }),
       });
-
-      this.logGroup = new aws.cloudwatchLogGroup.CloudwatchLogGroup(
-        this,
-        'logGroup',
-        {
-          name: `/eks/cluster/${id}`,
-          retentionInDays: 7,
-          tags: props.tags.getTags(),
-        }
-      );
     }
   }
 }
