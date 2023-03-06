@@ -15,6 +15,8 @@ interface CloudwatchSubscriptionFunctionProps {
 }
 
 class CloudwatchSubscriptionFunction extends Construct {
+  public readonly lambdaFunction: aws.lambdaFunction.LambdaFunction;
+
   constructor(
     scope: Construct,
     id: string,
@@ -24,7 +26,7 @@ class CloudwatchSubscriptionFunction extends Construct {
 
     const securityGroup = new aws.securityGroup.SecurityGroup(
       this,
-      'sgDefault',
+      'securityGroup',
       {
         vpcId: props.vpcId,
         name: `logging-function-${id}`,
@@ -41,26 +43,31 @@ class CloudwatchSubscriptionFunction extends Construct {
     );
 
     const asset = new TerraformAsset(this, 'source', {
-      path: path.resolve(__dirname, '"./lambda-forwarder/index.js'),
+      path: path.resolve(__dirname, './lambda-forwarder'),
       type: AssetType.ARCHIVE,
     });
 
-    new aws.lambdaFunction.LambdaFunction(this, 'functionDefault', {
-      functionName: `CloudWatchToOpenSearch_${id}`,
-      runtime: 'nodejs16.x',
-      filename: asset.path,
-      role: props.roleArn,
-      environment: {
-        variables: {
-          OS_ENDPOINT: props.osEndpoint,
-          INDEX_PREFIX: props.indexPrefix,
+    this.lambdaFunction = new aws.lambdaFunction.LambdaFunction(
+      this,
+      'function',
+      {
+        functionName: `CloudWatchToOpenSearch_${id}`,
+        runtime: 'nodejs16.x',
+        handler: 'index.handler',
+        filename: asset.path,
+        role: props.roleArn,
+        environment: {
+          variables: {
+            OS_ENDPOINT: props.osEndpoint,
+            INDEX_PREFIX: props.indexPrefix,
+          },
         },
-      },
-      vpcConfig: {
-        securityGroupIds: [securityGroup.id],
-        subnetIds: props.subnetIds,
-      },
-    });
+        vpcConfig: {
+          securityGroupIds: [securityGroup.id],
+          subnetIds: props.subnetIds,
+        },
+      }
+    );
   }
 }
 

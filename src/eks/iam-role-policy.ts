@@ -2,14 +2,14 @@ import {Construct} from 'constructs';
 import * as aws from '@cdktf/provider-aws';
 import {Fn} from 'cdktf';
 
-interface IamEksRolePolicyPolicyProps {
+interface IamClusterRolePolicyPolicyProps {
   name: string;
   policyArn?: string;
   policy?: string;
 }
 
-interface IamEksRolePolicyProps {
-  policies: IamEksRolePolicyPolicyProps[];
+interface IamClusterRolePolicyProps {
+  policies: IamClusterRolePolicyPolicyProps[];
   name: string;
   accountNumber: string;
   serviceAccountNamespace: string;
@@ -20,10 +20,10 @@ interface IamEksRolePolicyProps {
 /**
  * Setup IAM objects and roles for AWS ALB Controller
  */
-class IamEksRolePolicy extends Construct {
+class IamClusterRolePolicy extends Construct {
   public policies: aws.iamPolicy.IamPolicy[] = [];
 
-  constructor(scope: Construct, id: string, props: IamEksRolePolicyProps) {
+  constructor(scope: Construct, id: string, props: IamClusterRolePolicyProps) {
     super(scope, id);
 
     const policyArns: string[] = [];
@@ -34,7 +34,7 @@ class IamEksRolePolicy extends Construct {
       let policyArn = policy.policyArn;
 
       if (policy.policy) {
-        const _policy = new aws.iamPolicy.IamPolicy(this, `policy-${i}`, {
+        const _policy = new aws.iamPolicy.IamPolicy(this, `iamPolicy_${i}`, {
           name: `${props.name}_${policy.name}`,
           policy: policy.policy,
         });
@@ -48,7 +48,7 @@ class IamEksRolePolicy extends Construct {
 
     const oidcStr = Fn.replace(props.oidcIssuer, 'https://', '');
 
-    const role = new aws.iamRole.IamRole(this, 'role', {
+    const role = new aws.iamRole.IamRole(this, 'iamRole', {
       name: props.name,
       assumeRolePolicy: `
       {
@@ -74,7 +74,7 @@ class IamEksRolePolicy extends Construct {
     for (let i = 0; i < policyArns.length; i++) {
       new aws.iamRolePolicyAttachment.IamRolePolicyAttachment(
         this,
-        `rolePolicyAttachment-${i}`,
+        `rolePolicyAttachment_${i}`,
         {
           role: role.id,
           policyArn: policyArns[i],
@@ -84,4 +84,4 @@ class IamEksRolePolicy extends Construct {
   }
 }
 
-export {IamEksRolePolicy, IamEksRolePolicyProps, IamEksRolePolicyPolicyProps};
+export {IamClusterRolePolicy, IamClusterRolePolicyProps, IamClusterRolePolicyPolicyProps};

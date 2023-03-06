@@ -8,6 +8,9 @@ interface LambdaForwarderProps {
   tags: Tags;
 }
 
+/**
+ * Deploys CloudFormation stack to setup a data dog log forwarder
+ */
 class LambdaForwarder extends Construct {
   public readonly functionName = 'datadog-forwarder';
   public readonly stack: CloudformationStack;

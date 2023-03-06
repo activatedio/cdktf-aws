@@ -1,7 +1,7 @@
 import {Construct} from 'constructs';
 import * as aws from '@cdktf/provider-aws';
 import {Tags} from '../tags';
-import {StaticWebsite} from './staticwebsite';
+import {StaticWebsite} from './static-website';
 import {VerifiedCertificate} from '../certificate';
 
 interface AllInResolutionHostname {

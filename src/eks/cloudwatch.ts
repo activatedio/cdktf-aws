@@ -1,10 +1,11 @@
 import {Construct} from 'constructs';
 import * as aws from '@cdktf/provider-aws';
 import {Tags} from '../tags';
-import {IamEksRolePolicy} from './iam-eks-role-policy';
+import {IamEksRolePolicy} from './iam-role-policy';
 
 // format of loggroups is [baseGroupPath]/[clusterName]/[groupName]
 interface ClusterLogGroupsProps {
+  regionName: string;
   clusterName: string;
   baseGroupPath: string;
   groupNames: string[];
@@ -31,7 +32,7 @@ class ClusterLogGroups extends Construct {
     };
 
     props.groupNames.forEach(n => {
-      new aws.cloudwatchLogGroup.CloudwatchLogGroup(this, `cwlg_${n}`, {
+      new aws.cloudwatchLogGroup.CloudwatchLogGroup(this, `cloudWatchLogGroup_${n}`, {
         name: makeGroupName(n),
         retentionInDays: 7,
       });
@@ -57,7 +58,7 @@ class ClusterLogGroups extends Construct {
             ]
          }`;
 
-    const iamName = `AwsEksLogging_${props.clusterName}_${id}`;
+    const iamName = `AwsEksLogging_${props.regionName}_${props.clusterName}_${id}`;
 
     if (props.roleName) {
       const policy = new aws.iamPolicy.IamPolicy(this, 'loggingPolicy', {

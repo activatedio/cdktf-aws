@@ -18,6 +18,7 @@ interface FargateSelectorProps {
 }
 
 interface ClusterProps {
+  region: string;
   name: string;
   vpcId: string;
   subnetIds: string[];
@@ -29,6 +30,9 @@ interface ClusterProps {
   tags: Tags;
 }
 
+/**
+ * Opinionated setup of EKS cluster, including IAM roles, and node groups
+ */
 class Cluster extends Construct {
   public readonly cluster: aws.eksCluster.EksCluster;
   public readonly federatedRole: aws.iamRole.IamRole;
@@ -37,8 +41,10 @@ class Cluster extends Construct {
   constructor(scope: Construct, id: string, props: ClusterProps) {
     super(scope, id);
 
-    const clusterRole = new aws.iamRole.IamRole(this, 'r-eks', {
-      name: 'EksRolePolicy_' + id,
+    const iamSuffix = `${props.region}_${props.name}`
+
+    const clusterRole = new aws.iamRole.IamRole(this, 'roleEks', {
+      name: `EksRolePolicy_${iamSuffix}`,
       assumeRolePolicy: `
       {
         "Version": "2012-10-17",
@@ -56,7 +62,7 @@ class Cluster extends Construct {
     });
 
     const clusterRoleAttachment =
-      new aws.iamRolePolicyAttachment.IamRolePolicyAttachment(this, 'rpa-eks', {
+      new aws.iamRolePolicyAttachment.IamRolePolicyAttachment(this, 'rolePolicyAttachmentEks', {
         role: clusterRole.id,
         policyArn: 'arn:aws:iam::aws:policy/AmazonEKSClusterPolicy',
       });
@@ -76,8 +82,8 @@ class Cluster extends Construct {
       },
     ];
 
-    const sg = new aws.securityGroup.SecurityGroup(this, 'sg', {
-      name: `cluster-access-${props.name}`,
+    const sg = new aws.securityGroup.SecurityGroup(this, 'securityGroup', {
+      name: `eks-cluster-access-${props.name}`,
       vpcId: props.vpcId,
       ingress: sgIngress,
       tags: props.tags.getTags(),
@@ -145,11 +151,11 @@ class Cluster extends Construct {
 
     this.federatedRole = new aws.iamRole.IamRole(this, 'federatedRole', {
       assumeRolePolicy: doc.json,
-      name: 'EksRoleFederatedPolicy_' + id,
+      name: `EksRoleFederatedPolicy_${iamSuffix}`,
     });
 
     const nodeGroupRole = new aws.iamRole.IamRole(this, 'nodeGroupRole', {
-      name: `EksNodeGroup_${props.name}`,
+      name: `EksNodeGroup_${iamSuffix}`,
       assumeRolePolicy: `
       {
         "Version": "2012-10-17",
@@ -179,7 +185,7 @@ class Cluster extends Construct {
       nodePolicyAttachments.push(
         new aws.iamRolePolicyAttachment.IamRolePolicyAttachment(
           this,
-          `nodeGroupRoleAttachment-${i}`,
+          `nodeGroupRoleAttachment_${i}`,
           {
             policyArn: policy,
             role: nodeGroupRole.name,
@@ -192,7 +198,7 @@ class Cluster extends Construct {
       for (let i = 0; i < props.nodeGroups.length; i++) {
         const nodeGroupProps = props.nodeGroups[i];
 
-        new aws.eksNodeGroup.EksNodeGroup(this, `nodeGroup-${i}`, {
+        new aws.eksNodeGroup.EksNodeGroup(this, `nodeGroup_${i}`, {
           clusterName: this.cluster.name,
           nodeGroupName: nodeGroupProps.name,
           nodeRoleArn: nodeGroupRole.arn,

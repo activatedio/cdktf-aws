@@ -1,3 +1,3 @@
 export * from './cluster';
-export * from './iam-eks-role-policy';
-export * from './eks-cloudwatch';
+export * from './iam-role-policy';
+export * from './cloudwatch';

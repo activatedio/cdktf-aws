@@ -21,7 +21,7 @@ class PrivateBucket extends Construct {
 
     new aws.s3BucketPublicAccessBlock.S3BucketPublicAccessBlock(
       this,
-      `bucketPublicAccessPolicy-${id}`,
+      `bucketPublicAccessPolicy_${id}`,
       {
         bucket: this.bucket.id,
         blockPublicAcls: true,
@@ -32,7 +32,7 @@ class PrivateBucket extends Construct {
     );
 
     if (props.acl) {
-      new aws.s3BucketAcl.S3BucketAcl(this, `bucketAcl-${id}`, {
+      new aws.s3BucketAcl.S3BucketAcl(this, `bucketAcl_${id}`, {
         bucket: this.bucket.id,
         acl: props.acl,
       });
@@ -40,7 +40,7 @@ class PrivateBucket extends Construct {
 
     new aws.s3BucketServerSideEncryptionConfiguration.S3BucketServerSideEncryptionConfigurationA(
       this,
-      `bucketEnc-${id}`,
+      `bucketEnc_${id}`,
       {
         bucket: this.bucket.id,
         rule: [
@@ -55,7 +55,7 @@ class PrivateBucket extends Construct {
 
     new aws.s3BucketVersioning.S3BucketVersioningA(
       this,
-      `bucketVersioning-${id}`,
+      `bucketVersioning_${id}`,
       {
         bucket: this.bucket.id,
         versioningConfiguration: {

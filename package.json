@@ -6,7 +6,8 @@
   "types": "build/src/index.d.ts",
   "scripts": {
     "prepublish": "tsc",
-    "build": "tsc",
+    "build": "tsc && yarn copy-files",
+    "copy-files": "mkdir --parents ./build/src/oslogging/lambda-forwarder && cp ./src/oslogging/lambda-forwarder/* ./build/src/oslogging/lambda-forwarder/",
     "test": "jest",
     "test:watch": "jest --watch",
     "lint": "gts lint",

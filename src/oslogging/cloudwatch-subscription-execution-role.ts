@@ -19,7 +19,7 @@ class CloudwatchSubscriptionExecutionRole extends Construct {
   ) {
     super(scope, id);
 
-    const iamName = `CloudWatchOpenSearchSubscription_${id}`;
+    const iamName = `CloudWatchOpenSearchSubscription_${props.region}_${id}`;
 
     const policyDoc = `{
             "Version": "2012-10-17",

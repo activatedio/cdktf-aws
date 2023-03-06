@@ -7,9 +7,14 @@ interface LogIndexProps {
   vpcId: string;
   instanceCount: number;
   instanceType: string;
-  volumeSize: number;
+  ebsVolumeSize: number;
+  ebsThroughput: number;
   subnetIds: string[];
   accessCidrBlocks: string[];
+  availabilityZoneCount: number;
+  // Both custom endpoint and custom endpointCerificateArn have to be specified to enable
+  customEndpoint?: string;
+  customEndpointCertificateArn?: string;
   tags: Tags;
 }
 
@@ -21,7 +26,7 @@ class LogIndex extends Construct {
 
     const securityGroup = new aws.securityGroup.SecurityGroup(
       this,
-      'sgDefault',
+      'securityGroup',
       {
         vpcId: props.vpcId,
         name: `logging-search-${id}`,
@@ -49,13 +54,19 @@ class LogIndex extends Construct {
         instanceType: props.instanceType,
         zoneAwarenessEnabled: true,
         zoneAwarenessConfig: {
-          availabilityZoneCount: 3,
+          availabilityZoneCount: props.availabilityZoneCount,
         },
+      },
+      domainEndpointOptions: {
+        customEndpointEnabled: !!(props.customEndpoint && props.customEndpointCertificateArn),
+        customEndpoint: props.customEndpoint,
+        customEndpointCertificateArn: props.customEndpointCertificateArn,
+        enforceHttps: true,
       },
       ebsOptions: {
         ebsEnabled: true,
-        volumeSize: props.volumeSize,
-        throughput: 250,
+        volumeSize: props.ebsVolumeSize,
+        throughput: props.ebsThroughput,
       },
       encryptAtRest: {enabled: true},
       tags: props.tags.getTags(),
