@@ -84,4 +84,8 @@ class IamClusterRolePolicy extends Construct {
   }
 }
 
-export {IamClusterRolePolicy, IamClusterRolePolicyProps, IamClusterRolePolicyPolicyProps};
+export {
+  IamClusterRolePolicy,
+  IamClusterRolePolicyProps,
+  IamClusterRolePolicyPolicyProps,
+};

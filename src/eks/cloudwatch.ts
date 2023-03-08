@@ -32,10 +32,14 @@ class ClusterLogGroups extends Construct {
     };
 
     props.groupNames.forEach(n => {
-      new aws.cloudwatchLogGroup.CloudwatchLogGroup(this, `cloudWatchLogGroup_${n}`, {
-        name: makeGroupName(n),
-        retentionInDays: 7,
-      });
+      new aws.cloudwatchLogGroup.CloudwatchLogGroup(
+        this,
+        `cloudWatchLogGroup_${n}`,
+        {
+          name: makeGroupName(n),
+          retentionInDays: 7,
+        }
+      );
     });
 
     const iamPolicyDocument = `{

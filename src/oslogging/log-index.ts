@@ -58,7 +58,9 @@ class LogIndex extends Construct {
         },
       },
       domainEndpointOptions: {
-        customEndpointEnabled: !!(props.customEndpoint && props.customEndpointCertificateArn),
+        customEndpointEnabled: !!(
+          props.customEndpoint && props.customEndpointCertificateArn
+        ),
         customEndpoint: props.customEndpoint,
         customEndpointCertificateArn: props.customEndpointCertificateArn,
         enforceHttps: true,

@@ -1,6 +1,6 @@
 import {Construct} from 'constructs';
 import * as aws from '@cdktf/provider-aws';
-import { Tags } from '../tags';
+import {Tags} from '../tags';
 
 interface TwingateProps {
   domain: string;

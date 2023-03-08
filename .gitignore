@@ -5,3 +5,4 @@ node_modules
 tsconfig.tsbuildinfo
 !jest.config.js
 !setup.js
+.idea

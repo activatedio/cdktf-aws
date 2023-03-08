@@ -41,7 +41,7 @@ class Cluster extends Construct {
   constructor(scope: Construct, id: string, props: ClusterProps) {
     super(scope, id);
 
-    const iamSuffix = `${props.region}_${props.name}`
+    const iamSuffix = `${props.region}_${props.name}`;
 
     const clusterRole = new aws.iamRole.IamRole(this, 'roleEks', {
       name: `EksRolePolicy_${iamSuffix}`,
@@ -62,10 +62,14 @@ class Cluster extends Construct {
     });
 
     const clusterRoleAttachment =
-      new aws.iamRolePolicyAttachment.IamRolePolicyAttachment(this, 'rolePolicyAttachmentEks', {
-        role: clusterRole.id,
-        policyArn: 'arn:aws:iam::aws:policy/AmazonEKSClusterPolicy',
-      });
+      new aws.iamRolePolicyAttachment.IamRolePolicyAttachment(
+        this,
+        'rolePolicyAttachmentEks',
+        {
+          role: clusterRole.id,
+          policyArn: 'arn:aws:iam::aws:policy/AmazonEKSClusterPolicy',
+        }
+      );
 
     const sgIngress: aws.securityGroup.SecurityGroupIngress[] = [
       {

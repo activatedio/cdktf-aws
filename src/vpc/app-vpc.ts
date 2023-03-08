@@ -71,7 +71,10 @@ class AppVpc extends Vpc {
     };
 
     if (props.extraSubnetPrototypes) {
-      subnetPrototypes = {...subnetPrototypes, ...props.extraSubnetPrototypes};
+      subnetPrototypes = {
+        ...subnetPrototypes,
+        ...props.extraSubnetPrototypes,
+      };
     }
 
     super(scope, id, {

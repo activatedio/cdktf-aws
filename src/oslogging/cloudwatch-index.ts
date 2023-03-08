@@ -1,8 +1,8 @@
 import {Construct} from 'constructs';
 import * as aws from '@cdktf/provider-aws';
-import { Tags } from '../tags';
-import { CloudwatchSubscriptionExecutionRole } from './cloudwatch-subscription-execution-role';
-import { CloudwatchSubscriptionFunction } from './cloudwatch-subscription-function';
+import {Tags} from '../tags';
+import {CloudwatchSubscriptionExecutionRole} from './cloudwatch-subscription-execution-role';
+import {CloudwatchSubscriptionFunction} from './cloudwatch-subscription-function';
 
 interface CloudwatchForwarderProps {
   vpcId: string;
@@ -31,33 +31,25 @@ class CloudwatchForwarder extends Construct {
   constructor(scope: Construct, id: string, props: CloudwatchForwarderProps) {
     super(scope, id);
 
-    const role = new CloudwatchSubscriptionExecutionRole(
-      this,
-      `cwser-${id}`,
-      {
-        accountNumber: props.accountNumber,
-        region: props.region,
-        domainName: props.domainName,
-        tags: props.tags,
-      }
-    );
+    const role = new CloudwatchSubscriptionExecutionRole(this, `cwser-${id}`, {
+      accountNumber: props.accountNumber,
+      region: props.region,
+      domainName: props.domainName,
+      tags: props.tags,
+    });
 
     for (let i = 0; i < props.targets.length; i++) {
       const target = props.targets[i];
 
-      const func = new CloudwatchSubscriptionFunction(
-        this,
-        `cwsf-${id}-${i}`,
-        {
-          roleArn: role.role.arn,
-          vpcId: props.vpcId,
-          subnetIds: props.subnetIds,
-          egressCidr: props.egressCidr,
-          tags: props.tags,
-          osEndpoint: target.osEndpoint,
-          indexPrefix: target.indexPrefix,
-        }
-      );
+      const func = new CloudwatchSubscriptionFunction(this, `cwsf-${id}-${i}`, {
+        roleArn: role.role.arn,
+        vpcId: props.vpcId,
+        subnetIds: props.subnetIds,
+        egressCidr: props.egressCidr,
+        tags: props.tags,
+        osEndpoint: target.osEndpoint,
+        indexPrefix: target.indexPrefix,
+      });
 
       for (let j = 0; j < target.sources.length; j++) {
         const source = target.sources[j];
