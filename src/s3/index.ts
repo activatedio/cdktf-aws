@@ -1,1 +1,1 @@
-export * from './privatebucket';
+export * from './private-bucket';

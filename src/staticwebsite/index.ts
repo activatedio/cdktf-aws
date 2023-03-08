@@ -1,2 +1,2 @@
 export * from './static-website';
-export * from './allinstaticwebsite';
+export * from './allin-static-website';
