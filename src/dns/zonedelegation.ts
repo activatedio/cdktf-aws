@@ -7,7 +7,7 @@ interface ZoneDelegationProps {
    * Must be a subdomain of the parent zone
    */
   delegatedZoneId?: string;
-  delegatedNameservers?: string[];
+  delegatedNameServers?: string[];
   delegatedHostname: string;
 }
 
@@ -20,8 +20,8 @@ class ZoneDelegation extends Construct {
 
     let nameServers: string[];
 
-    if (props.delegatedNameservers) {
-      nameServers = props.delegatedNameservers;
+    if (props.delegatedNameServers) {
+      nameServers = props.delegatedNameServers;
     } else if (props.delegatedZoneId) {
       const delegatedZone = new aws.dataAwsRoute53Zone.DataAwsRoute53Zone(
         this,

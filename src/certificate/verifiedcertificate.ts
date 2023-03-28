@@ -3,12 +3,11 @@ import * as aws from '@cdktf/provider-aws';
 import {Tags} from '../tags';
 
 interface VerifiedCertificateProps {
-  zoneId: string;
+  zoneId?: string;
   domainName: string;
   certificateProvider?: aws.provider.AwsProvider;
   tags: Tags;
   subjectAlternativeNames?: string[];
-  skipVerification?: boolean;
 }
 
 class VerifiedCertificate extends Construct {
@@ -27,7 +26,7 @@ class VerifiedCertificate extends Construct {
 
     const created: {[key: string]: boolean} = {};
 
-    if (!props.skipVerification) {
+    if (props.zoneId) {
       new aws.route53Record.Route53Record(this, 'record', {
         zoneId: props.zoneId,
         name: this.certificate.domainValidationOptions.get(0)
@@ -60,21 +59,23 @@ class VerifiedCertificate extends Construct {
             continue;
           }
 
-          new aws.route53Record.Route53Record(this, `recordAlt-${i}`, {
-            zoneId: props.zoneId,
-            name: this.certificate.domainValidationOptions.get(index)
-              .resourceRecordName,
-            type: this.certificate.domainValidationOptions.get(index)
-              .resourceRecordType,
-            ttl: 300,
-            records: [
-              this.certificate.domainValidationOptions.get(index)
-                .resourceRecordValue,
-            ],
-            lifecycle: {
-              createBeforeDestroy: false,
-            },
-          });
+          if (props.zoneId) {
+            new aws.route53Record.Route53Record(this, `recordAlt-${i}`, {
+              zoneId: props.zoneId,
+              name: this.certificate.domainValidationOptions.get(index)
+                .resourceRecordName,
+              type: this.certificate.domainValidationOptions.get(index)
+                .resourceRecordType,
+              ttl: 300,
+              records: [
+                this.certificate.domainValidationOptions.get(index)
+                  .resourceRecordValue,
+              ],
+              lifecycle: {
+                createBeforeDestroy: false,
+              },
+            });
+          }
 
           created[canonical] = true;
         }

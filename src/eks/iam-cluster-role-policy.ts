@@ -3,7 +3,7 @@ import * as aws from '@cdktf/provider-aws';
 import {Fn} from 'cdktf';
 
 interface IamClusterRolePolicyPolicyProps {
-  name: string;
+  name?: string;
   policyArn?: string;
   policy?: string;
 }

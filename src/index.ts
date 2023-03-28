@@ -9,3 +9,4 @@ export * as staticwebsite from './staticwebsite';
 export * as dns from './dns';
 export * as oslogging from './oslogging';
 export * as iampolicies from './iampolicies';
+export * as twingate from './twingate';

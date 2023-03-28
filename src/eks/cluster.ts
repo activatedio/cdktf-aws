@@ -11,6 +11,7 @@ interface NodeGroupProps {
   instanceTypes: string[];
   diskSize?: number;
   capacityType?: string;
+  subnetIds: string[];
 }
 
 interface FargateSelectorProps {
@@ -206,7 +207,7 @@ class Cluster extends Construct {
           clusterName: this.cluster.name,
           nodeGroupName: nodeGroupProps.name,
           nodeRoleArn: nodeGroupRole.arn,
-          subnetIds: props.subnetIds,
+          subnetIds: nodeGroupProps.subnetIds,
           instanceTypes: nodeGroupProps.instanceTypes,
           diskSize: nodeGroupProps.diskSize,
           capacityType: nodeGroupProps.capacityType,

@@ -5,12 +5,13 @@ import {Tags} from '../tags';
 interface ZonePairProps {
   vpcId: string;
   name: string;
+  skipPublic?: boolean;
   tags: Tags;
 }
 
 class ZonePair extends Construct {
   public privateZone: aws.route53Zone.Route53Zone;
-  public publicZone: aws.route53Zone.Route53Zone;
+  public publicZone?: aws.route53Zone.Route53Zone;
 
   constructor(scope: Construct, id: string, props: ZonePairProps) {
     super(scope, id);
@@ -25,10 +26,12 @@ class ZonePair extends Construct {
       ],
     });
 
-    this.publicZone = new aws.route53Zone.Route53Zone(this, 'public', {
-      name: props.name,
-      tags: props.tags.getTags(),
-    });
+    if (!props.skipPublic) {
+      this.publicZone = new aws.route53Zone.Route53Zone(this, 'public', {
+        name: props.name,
+        tags: props.tags.getTags(),
+      });
+    }
   }
 }
 

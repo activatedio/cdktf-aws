@@ -68,13 +68,11 @@ class AllInWebsite extends Construct {
           zoneId: host.zoneId,
           type: 'A',
           name: host.name,
-          alias: [
-            {
-              zoneId: this.staticWebsite.distribution.hostedZoneId,
-              name: this.staticWebsite.distribution.domainName,
-              evaluateTargetHealth: false,
-            },
-          ],
+          alias: {
+            zoneId: this.staticWebsite.distribution.hostedZoneId,
+            name: this.staticWebsite.distribution.domainName,
+            evaluateTargetHealth: false,
+          },
         });
       }
     }

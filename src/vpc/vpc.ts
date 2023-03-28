@@ -101,7 +101,7 @@ class Vpc extends Construct {
           vpcId: this.vpc.id,
           cidrBlock: cidr.toCidrString(),
           availabilityZone: props.availabilityZones[i],
-          tags: _tags.getTags(),
+          tags: _tags.withTags({class: name}).getTags(),
         });
 
         let routeTableId: string | undefined;
