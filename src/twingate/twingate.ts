@@ -54,6 +54,7 @@ sudo systemctl enable --now twingate-connector
         tags: props.tags.withName(iProps.name).getTags(),
         ami: image.id,
         lifecycle: {
+          preventDestroy: true,
           ignoreChanges: 'all',
         },
       });
