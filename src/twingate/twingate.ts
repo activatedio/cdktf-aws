@@ -53,6 +53,9 @@ sudo systemctl enable --now twingate-connector
         subnetId: iProps.subnetId,
         tags: props.tags.withName(iProps.name).getTags(),
         ami: image.id,
+        lifecycle: {
+          ignoreChanges: 'all',
+        },
       });
     }
   }
