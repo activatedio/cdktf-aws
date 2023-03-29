@@ -231,7 +231,7 @@ class Cluster extends Construct {
 
     if (props.includeFargateProfile) {
       this.fargateRole = new aws.iamRole.IamRole(this, 'fargateRole', {
-        name: `EksFargateProfile_${props.name}`,
+        name: `EksFargateProfile_${iamSuffix}`,
         assumeRolePolicy: `
       {
         "Version": "2012-10-17",
