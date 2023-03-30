@@ -90,8 +90,12 @@ class ClusterLogGroups extends Construct {
           },
         ],
         name: iamName,
-        serviceAccountNamespace: sarp.serviceAccountNamespace,
-        serviceAccountName: sarp.serviceAccountName,
+        serviceAccounts: [
+          {
+            serviceAccountNamespace: sarp.serviceAccountNamespace,
+            serviceAccountName: sarp.serviceAccountName,
+          },
+        ],
         accountNumber: sarp.accountNumber,
         oidcIssuer: sarp.issuer,
       });

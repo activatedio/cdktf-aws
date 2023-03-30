@@ -7,13 +7,17 @@ interface IamClusterRolePolicyPolicyProps {
   policyArn?: string;
   policy?: string;
 }
+interface IamClusterRolePolicyServiceAccountProps {
+  serviceAccountNamespace: string;
+  serviceAccountName: string;
+}
 
 interface IamClusterRolePolicyProps {
   policies: IamClusterRolePolicyPolicyProps[];
   name: string;
+  assumeRolePolicies?: string[];
+  serviceAccounts: IamClusterRolePolicyServiceAccountProps[];
   accountNumber: string;
-  serviceAccountNamespace: string;
-  serviceAccountName: string;
   oidcIssuer: string;
 }
 
@@ -54,20 +58,25 @@ class IamClusterRolePolicy extends Construct {
       {
         "Version": "2012-10-17",
         "Statement": [
-            {
-                "Effect": "Allow",
-                "Principal": {
-                    "Federated": "arn:aws:iam::${props.accountNumber}:oidc-provider/${oidcStr}"
-                },
-                "Action": "sts:AssumeRoleWithWebIdentity",
-                "Condition": {
-                    "StringEquals": {
-                        "${oidcStr}:aud": "sts.amazonaws.com",
-                        "${oidcStr}:sub": "system:serviceaccount:${props.serviceAccountNamespace}:${props.serviceAccountName}"
-                    }
+        ${props.serviceAccounts
+          .map(sa => {
+            return `{
+              "Effect": "Allow",
+              "Principal": {
+                "Federated": "arn:aws:iam::${props.accountNumber}:oidc-provider/${oidcStr}"
+              },
+              "Action": "sts:AssumeRoleWithWebIdentity",
+              "Condition": {
+                "StringEquals": {
+                  "${oidcStr}:aud": "sts.amazonaws.com",
+                  "${oidcStr}:sub": "system:serviceaccount:${sa.serviceAccountNamespace}:${sa.serviceAccountName}"
                 }
-            }
-        ]
+              }
+            }`;
+          })
+          .concat(props.assumeRolePolicies ? props.assumeRolePolicies : [])
+          .join(',')}
+        ] 
     }`,
     });
 
