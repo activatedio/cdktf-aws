@@ -50,7 +50,7 @@ class AppVpc extends Vpc {
 
   constructor(scope: Construct, id: string, props: AppVpcProps) {
     const _cidr = createCIDR(props.cidr);
-    const resolverIP = _cidr.addOctet(3, 5, 32).toCidrString().split('/')[0];
+    const resolverIP = _cidr.addOctet(3, 2, 32).toCidrString().split('/')[0];
     if (_cidr.mask !== 16) {
       throw new Error('cidr must have /16 mask');
     }
@@ -166,7 +166,7 @@ class AppVpc extends Vpc {
       dnsClientCidrs = dnsClientCidrs.concat(props.dnsClientCidrs);
     }
 
-    new DnsEndpoints(this, 'dnsEndpoints', {
+    const endpoints = new DnsEndpoints(this, 'dnsEndpoints', {
       clientCidrs: dnsClientCidrs,
       forwarders: [resolverIP],
       subnetIds: this.subnets[SERVICE].map(s => s.id),
@@ -175,6 +175,24 @@ class AppVpc extends Vpc {
       tags: props.tags,
       vpcId: this.vpc.id,
     });
+
+    const dhcpOptions = new aws.vpcDhcpOptions.VpcDhcpOptions(
+      this,
+      'dhcpOptions',
+      {
+        domainNameServers: endpoints.addresses,
+        tags: props.tags.getTags(),
+      }
+    );
+
+    new aws.vpcDhcpOptionsAssociation.VpcDhcpOptionsAssociation(
+      this,
+      'dhcpOptionsAssociation',
+      {
+        vpcId: this.vpc.id,
+        dhcpOptionsId: dhcpOptions.id,
+      }
+    );
   }
 }
 

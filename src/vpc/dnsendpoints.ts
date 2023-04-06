@@ -1,7 +1,7 @@
 import {Construct} from 'constructs';
 import * as aws from '@cdktf/provider-aws';
 import {Tags} from '../tags';
-import {Fn} from "cdktf";
+import {Fn} from 'cdktf';
 
 interface DelegatedZoneProps {
   name: string;
@@ -19,6 +19,8 @@ interface DnsEndpointsProps {
 }
 
 class DnsEndpoints extends Construct {
+  public readonly addresses: string[] = [];
+
   constructor(scope: Construct, id: string, props: DnsEndpointsProps) {
     super(scope, id);
 
@@ -57,6 +59,14 @@ class DnsEndpoints extends Construct {
       name: securityGroupName,
       vpcId: props.vpcId,
       ingress: ingresses,
+      egress: [
+        {
+          fromPort: 0,
+          toPort: 0,
+          protocol: '-1',
+          cidrBlocks: ['0.0.0.0/0'],
+        },
+      ],
       tags: props.tags.withName(securityGroupName).getTags(),
     });
 
@@ -73,9 +83,30 @@ class DnsEndpoints extends Construct {
 
       const privateIp = Fn.cidrhost(subnetCidr.cidrBlock, 5);
 
+      this.addresses.push(privateIp);
+
       const delegatedZones = props.delegatedZones ? props.delegatedZones : [];
 
       const userData = `#! /bin/bash
+
+cat << 'EOF' | sudo tee /etc/netplan/99-custom-dns.yaml
+network:
+  version: 2
+  ethernets:
+    ens5:
+      nameservers:
+        addresses: [8.8.8.8, 8.8.4.4]
+      dhcp4-overrides:
+        use-dns: false
+        use-domains: false
+EOF
+
+netplan generate
+netplan apply
+
+apt-get update
+apt-get install -y bind9
+
 
 cat << EOF > /etc/bind/named.conf.options
 acl goodclients {
@@ -95,7 +126,7 @@ ${props.forwarders.map(c => `  ${c};\n`)}
   };
   forward only;
 
-  dnssec-validation auto;
+  dnssec-validation no;
 
   auth-nxdomain no;    # conform to RFC1035
   listen-on-v6 { any; };
@@ -112,8 +143,8 @@ zone "${dz.name}" {
 
 EOF
 
-apt-get update
-apt-get install bind9
+systemctl restart bind9
+
 `;
 
       new aws.instance.Instance(this, `instance-${i}`, {
