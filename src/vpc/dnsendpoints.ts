@@ -1,6 +1,7 @@
 import {Construct} from 'constructs';
 import * as aws from '@cdktf/provider-aws';
 import {Tags} from '../tags';
+import {Fn} from "cdktf";
 
 interface DelegatedZoneProps {
   name: string;
@@ -62,17 +63,15 @@ class DnsEndpoints extends Construct {
     for (let i = 0; i < props.subnetIds.length; i++) {
       const subnetId = props.subnetIds[i];
 
-      const zeroIP = new aws.dataAwsSubnet.DataAwsSubnet(
+      const subnetCidr = new aws.dataAwsSubnet.DataAwsSubnet(
         this,
         `dataSubnet_${i}`,
         {
           id: subnetId,
         }
-      ).cidrBlock.split('/')[0];
+      );
 
-      const octets = zeroIP.split('.');
-
-      const staticIp = `${octets[0]}.${octets[1]}.${octets[2]}.5`;
+      const privateIp = Fn.cidrhost(subnetCidr.cidrBlock, 5);
 
       const delegatedZones = props.delegatedZones ? props.delegatedZones : [];
 
@@ -123,7 +122,7 @@ apt-get install bind9
         count: 1,
         instanceType: 't3a.micro',
         subnetId: subnetId,
-        privateIp: staticIp,
+        privateIp: privateIp,
         vpcSecurityGroupIds: [securityGroup.id],
         keyName: props.keyName,
         tags: props.tags.withName(`ns${i}`).getTags(),
@@ -136,4 +135,4 @@ apt-get install bind9
   }
 }
 
-export {DnsEndpoints, DnsEndpointsProps};
+export {DnsEndpoints, DnsEndpointsProps, DelegatedZoneProps};

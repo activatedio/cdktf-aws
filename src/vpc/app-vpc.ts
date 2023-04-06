@@ -3,6 +3,8 @@ import * as aws from '@cdktf/provider-aws';
 import {Tags} from '../tags';
 import {createCIDR} from './cidr';
 import {SubnetPrototypeProps, Vpc, RouteTablePrototypeProps} from './vpc';
+import {DnsEndpoints, DelegatedZoneProps} from './dnsendpoints';
+import * as dns from 'dns';
 
 interface SubnetAclProps {
   ingress?: aws.networkAcl.NetworkAclIngress[];
@@ -20,6 +22,9 @@ interface AppVpcProps {
   networkAcls?: {[key: string]: SubnetAclProps};
   serviceSubnetTags?: {[key: string]: string};
   publicSubnetTags?: {[key: string]: string};
+  dnsClientCidrs?: string[];
+  dnsDelegatedZones?: DelegatedZoneProps[];
+  keyName?: string;
   tags: Tags;
 }
 
@@ -36,6 +41,7 @@ interface AppVpcProps {
  */
 
 const PUBLIC = 'public';
+const SERVICE = 'service';
 
 class AppVpc extends Vpc {
   public readonly networkAcls: {[key: string]: aws.networkAcl.NetworkAcl} = {};
@@ -44,6 +50,7 @@ class AppVpc extends Vpc {
 
   constructor(scope: Construct, id: string, props: AppVpcProps) {
     const _cidr = createCIDR(props.cidr);
+    const resolverIP = _cidr.addOctet(3, 5, 32).toCidrString().split('/')[0];
     if (_cidr.mask !== 16) {
       throw new Error('cidr must have /16 mask');
     }
@@ -152,6 +159,22 @@ class AppVpc extends Vpc {
         ingress: ingress,
       });
     }
+
+    let dnsClientCidrs = [props.cidr];
+
+    if (props.dnsClientCidrs) {
+      dnsClientCidrs = dnsClientCidrs.concat(props.dnsClientCidrs);
+    }
+
+    new DnsEndpoints(this, 'dnsEndpoints', {
+      clientCidrs: dnsClientCidrs,
+      forwarders: [resolverIP],
+      subnetIds: this.subnets[SERVICE].map(s => s.id),
+      delegatedZones: props.dnsDelegatedZones,
+      keyName: props.keyName,
+      tags: props.tags,
+      vpcId: this.vpc.id,
+    });
   }
 }
 
