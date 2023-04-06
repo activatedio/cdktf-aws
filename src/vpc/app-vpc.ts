@@ -38,9 +38,9 @@ interface AppVpcProps {
 const PUBLIC = 'public';
 
 class AppVpc extends Vpc {
-  public networkAcls: {[key: string]: aws.networkAcl.NetworkAcl} = {};
-  public internetGateway: aws.internetGateway.InternetGateway;
-  public natGateways: aws.natGateway.NatGateway[] = [];
+  public readonly networkAcls: {[key: string]: aws.networkAcl.NetworkAcl} = {};
+  public readonly internetGateway: aws.internetGateway.InternetGateway;
+  public readonly natGateways: aws.natGateway.NatGateway[] = [];
 
   constructor(scope: Construct, id: string, props: AppVpcProps) {
     const _cidr = createCIDR(props.cidr);

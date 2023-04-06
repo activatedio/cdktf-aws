@@ -2,6 +2,7 @@ import {Construct} from 'constructs';
 import * as aws from '@cdktf/provider-aws';
 import * as tls from '@cdktf/provider-tls';
 import {Tags} from '../tags';
+import fluentLogging from '../iampolicies/fluent-logging.json';
 
 interface NodeGroupProps {
   name: string;
@@ -246,6 +247,7 @@ class Cluster extends Construct {
         ]
       }
       `,
+        tags: props.tags.getTags(),
       });
 
       new aws.iamRolePolicyAttachment.IamRolePolicyAttachment(
@@ -254,6 +256,37 @@ class Cluster extends Construct {
         {
           policyArn:
             'arn:aws:iam::aws:policy/AmazonEKSFargatePodExecutionRolePolicy',
+          role: this.fargateRole.name,
+        }
+      );
+
+      const loggingPolicy = new aws.iamPolicy.IamPolicy(
+        this,
+        'fargateLoggingPolicy',
+        {
+          name: `EksFargateLogging_${iamSuffix}`,
+          policy: `{
+            "Version": "2012-10-17",
+            "Statement": [{
+              "Effect": "Allow",
+              "Action": [
+                "logs:CreateLogStream",
+                "logs:CreateLogGroup",
+                "logs:DescribeLogStreams",
+                "logs:PutLogEvents"
+              ],
+              "Resource": "arn:aws:logs:${props.region}:*"
+            }]
+          }`,
+          tags: props.tags.getTags(),
+        }
+      );
+
+      new aws.iamRolePolicyAttachment.IamRolePolicyAttachment(
+        this,
+        'fargateLoggingRolePolicyAttachment',
+        {
+          policyArn: loggingPolicy.arn,
           role: this.fargateRole.name,
         }
       );
@@ -268,6 +301,7 @@ class Cluster extends Construct {
             namespace: p.namespace,
           };
         }),
+        tags: props.tags.getTags(),
       });
     }
   }
