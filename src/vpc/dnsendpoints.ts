@@ -110,7 +110,7 @@ apt-get install -y bind9
 
 cat << EOF > /etc/bind/named.conf.options
 acl goodclients {
-${props.clientCidrs.map(c => `  ${c};\n`)}
+${props.clientCidrs.map(c => `  ${c};`).join('\n')}
   localhost;
   localnets;
 };

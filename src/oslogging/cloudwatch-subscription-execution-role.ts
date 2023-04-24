@@ -2,10 +2,14 @@ import {Construct} from 'constructs';
 import {Tags} from '../tags';
 import * as aws from '@cdktf/provider-aws';
 
-interface CloudwatchSubscriptionExecutionRoleProps {
+interface CloudwatchSubscriptionExecutionRoleDomainProps {
   accountNumber: string;
-  region: string;
   domainName: string;
+}
+
+interface CloudwatchSubscriptionExecutionRoleProps {
+  region: string;
+  domain?: CloudwatchSubscriptionExecutionRoleDomainProps;
   tags: Tags;
 }
 
@@ -19,7 +23,7 @@ class CloudwatchSubscriptionExecutionRole extends Construct {
   ) {
     super(scope, id);
 
-    const iamName = `CloudWatchOpenSearchSubscription_${props.region}_${id}`;
+    const iamName = `CWOSSub_${props.region}_${id}`;
 
     const policyDoc = `{
             "Version": "2012-10-17",
@@ -34,13 +38,18 @@ class CloudwatchSubscriptionExecutionRole extends Construct {
                     "ec2:AttachNetworkInterface"
                   ],
                   "Resource": "*"
-                },
+                }${
+                  props.domain
+                    ? `,
                 {
                     "Action": [
                         "es:*"
                     ],
                     "Effect": "Allow",
-                    "Resource": "arn:aws:es:${props.region}:${props.accountNumber}:domain/${props.domainName}/*"
+                    "Resource": "arn:aws:es:${props.region}:${props.domain.accountNumber}:domain/${props.domain.domainName}/*"
+                }
+                `
+                    : ''
                 }
             ]
         }
@@ -93,4 +102,5 @@ class CloudwatchSubscriptionExecutionRole extends Construct {
 export {
   CloudwatchSubscriptionExecutionRole,
   CloudwatchSubscriptionExecutionRoleProps,
+  CloudwatchSubscriptionExecutionRoleDomainProps,
 };

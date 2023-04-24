@@ -10,6 +10,9 @@ interface CloudwatchSubscriptionFunctionProps {
   subnetIds: string[];
   roleArn: string;
   osEndpoint: string;
+  // 'aws', 'elastic'
+  osType: string;
+  elasticApiKey?: string;
   indexPrefix: string;
   tags: Tags;
 }
@@ -43,9 +46,18 @@ class CloudwatchSubscriptionFunction extends Construct {
     );
 
     const asset = new TerraformAsset(this, 'source', {
-      path: path.resolve(__dirname, './lambda-forwarder'),
+      path: path.resolve(__dirname, './lambda-forwarder-' + props.osType),
       type: AssetType.ARCHIVE,
     });
+
+    const variables: any = {
+      OS_ENDPOINT: props.osEndpoint,
+      INDEX_PREFIX: props.indexPrefix,
+    };
+
+    if (props.elasticApiKey) {
+      variables['API_KEY'] = props.elasticApiKey;
+    };
 
     this.lambdaFunction = new aws.lambdaFunction.LambdaFunction(
       this,
@@ -57,10 +69,7 @@ class CloudwatchSubscriptionFunction extends Construct {
         filename: asset.path,
         role: props.roleArn,
         environment: {
-          variables: {
-            OS_ENDPOINT: props.osEndpoint,
-            INDEX_PREFIX: props.indexPrefix,
-          },
+          variables: variables,
         },
         vpcConfig: {
           securityGroupIds: [securityGroup.id],

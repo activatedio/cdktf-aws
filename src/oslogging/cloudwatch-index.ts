@@ -1,22 +1,29 @@
 import {Construct} from 'constructs';
 import * as aws from '@cdktf/provider-aws';
 import {Tags} from '../tags';
-import {CloudwatchSubscriptionExecutionRole} from './cloudwatch-subscription-execution-role';
+import {
+  CloudwatchSubscriptionExecutionRole,
+  CloudwatchSubscriptionExecutionRoleProps,
+} from './cloudwatch-subscription-execution-role';
 import {CloudwatchSubscriptionFunction} from './cloudwatch-subscription-function';
 
 interface CloudwatchForwarderProps {
   vpcId: string;
+  accountNumber: string;
   subnetIds: string[];
   egressCidr: string;
-  accountNumber: string;
   region: string;
-  domainName: string;
+  // 'aws' or 'elastic'
+  osType: string;
+  osEndpoint: string;
+  // required if osType is 'aws'
+  osDomainName?: string;
+  elasticApiKey?: string;
   targets: CloudwatchForwarderTargetProps[];
   tags: Tags;
 }
 
 interface CloudwatchForwarderTargetProps {
-  osEndpoint: string;
   indexPrefix: string;
   sources: CloudwatchForwarderSourceProps[];
 }
@@ -24,19 +31,30 @@ interface CloudwatchForwarderTargetProps {
 interface CloudwatchForwarderSourceProps {
   logGroupName: string;
   filterPattern: string;
-  indexPrefix: string;
+  //indexPrefix: string;
 }
 
 class CloudwatchForwarder extends Construct {
   constructor(scope: Construct, id: string, props: CloudwatchForwarderProps) {
     super(scope, id);
 
-    const role = new CloudwatchSubscriptionExecutionRole(this, `cwser-${id}`, {
-      accountNumber: props.accountNumber,
+    const roleProps: CloudwatchSubscriptionExecutionRoleProps = {
       region: props.region,
-      domainName: props.domainName,
       tags: props.tags,
-    });
+    };
+
+    if (props.osType === 'aws' && props.osDomainName) {
+      roleProps.domain = {
+        accountNumber: props.accountNumber,
+        domainName: props.osDomainName,
+      };
+    }
+
+    const role = new CloudwatchSubscriptionExecutionRole(
+      this,
+      `cwser-${id}`,
+      roleProps
+    );
 
     for (let i = 0; i < props.targets.length; i++) {
       const target = props.targets[i];
@@ -47,7 +65,9 @@ class CloudwatchForwarder extends Construct {
         subnetIds: props.subnetIds,
         egressCidr: props.egressCidr,
         tags: props.tags,
-        osEndpoint: target.osEndpoint,
+        osType: props.osType,
+        osEndpoint: props.osEndpoint,
+        elasticApiKey: props.elasticApiKey,
         indexPrefix: target.indexPrefix,
       });
 

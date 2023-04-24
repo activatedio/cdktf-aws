@@ -163,7 +163,7 @@ class AppVpc extends Vpc {
     let dnsClientCidrs = [props.cidr];
 
     if (props.dnsClientCidrs) {
-      dnsClientCidrs = dnsClientCidrs.concat(props.dnsClientCidrs);
+      dnsClientCidrs = [...dnsClientCidrs, ...props.dnsClientCidrs];
     }
 
     const endpoints = new DnsEndpoints(this, 'dnsEndpoints', {
