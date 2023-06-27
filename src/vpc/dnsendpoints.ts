@@ -25,7 +25,7 @@ class DnsEndpoints extends Construct {
   constructor(scope: Construct, id: string, props: DnsEndpointsProps) {
     super(scope, id);
 
-    const _prefix = props.prefix ? `-${props.prefix}` : '';
+    const _prefix = props.prefix ? `${props.prefix}-` : '';
 
     const image = new aws.dataAwsAmi.DataAwsAmi(this, 'ami', {
       owners: ['099720109477'],
