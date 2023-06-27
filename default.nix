@@ -5,7 +5,7 @@ stdenv.mkDerivation {
   name = "cdktf-aws";
 
   buildInputs = with pkgs; [
-    nodejs-16_x
+    nodejs-18_x
     yarn
   ];
 

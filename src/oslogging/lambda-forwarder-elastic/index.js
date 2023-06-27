@@ -191,7 +191,6 @@ function post(body, callback) {
 }
 
 function buildRequest(endpoint, body) {
-
   return {
     host: endpoint,
     method: 'POST',
@@ -204,7 +203,6 @@ function buildRequest(endpoint, body) {
       Authorization: 'ApiKey ' + apiKey,
     },
   };
-
 }
 
 function hash(str, encoding) {

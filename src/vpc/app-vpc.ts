@@ -167,6 +167,7 @@ class AppVpc extends Vpc {
     }
 
     const endpoints = new DnsEndpoints(this, 'dnsEndpoints', {
+      prefix: id,
       clientCidrs: dnsClientCidrs,
       forwarders: [resolverIP],
       subnetIds: this.subnets[SERVICE].map(s => s.id),
