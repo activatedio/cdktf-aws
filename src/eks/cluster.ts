@@ -15,8 +15,13 @@ interface NodeGroupProps {
   subnetIds: string[];
 }
 
-interface FargateSelectorProps {
+interface IFargateSelectorProps {
   namespace: string;
+}
+
+interface IFargateProfileProps {
+  name: string;
+  selectors: IFargateSelectorProps[];
 }
 
 interface ClusterProps {
@@ -27,8 +32,7 @@ interface ClusterProps {
   // CIDR Blocks which can access the cluster for management
   accessCidrs: string[];
   nodeGroups?: NodeGroupProps[];
-  includeFargateProfile?: boolean;
-  fargateSelectors?: FargateSelectorProps[];
+  fargateProfiles?: IFargateProfileProps[];
   tags: Tags;
 }
 
@@ -230,7 +234,7 @@ class Cluster extends Construct {
       }
     }
 
-    if (props.includeFargateProfile) {
+    if (props.fargateProfiles) {
       this.fargateRole = new aws.iamRole.IamRole(this, 'fargateRole', {
         name: `EksFargateProfile_${iamSuffix}`,
         assumeRolePolicy: `
@@ -291,20 +295,32 @@ class Cluster extends Construct {
         }
       );
 
-      new aws.eksFargateProfile.EksFargateProfile(this, 'fargateProfile', {
-        clusterName: this.cluster.name,
-        fargateProfileName: 'default',
-        podExecutionRoleArn: this.fargateRole.arn,
-        subnetIds: props.subnetIds,
-        selector: props.fargateSelectors!.map(p => {
-          return {
-            namespace: p.namespace,
-          };
-        }),
-        tags: props.tags.getTags(),
+      props.fargateProfiles.forEach(v => {
+        new aws.eksFargateProfile.EksFargateProfile(
+          this,
+          `fargateProfile_${v.name}`,
+          {
+            clusterName: this.cluster.name,
+            fargateProfileName: v.name,
+            podExecutionRoleArn: this.fargateRole!.arn,
+            subnetIds: props.subnetIds,
+            selector: v.selectors.map(p => {
+              return {
+                namespace: p.namespace,
+              };
+            }),
+            tags: props.tags.getTags(),
+          }
+        );
       });
     }
   }
 }
 
-export {Cluster, ClusterProps, NodeGroupProps, FargateSelectorProps};
+export {
+  Cluster,
+  ClusterProps,
+  NodeGroupProps,
+  IFargateProfileProps,
+  IFargateSelectorProps,
+};

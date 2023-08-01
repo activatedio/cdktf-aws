@@ -8,6 +8,7 @@ interface CloudwatchSubscriptionExecutionRoleDomainProps {
 }
 
 interface CloudwatchSubscriptionExecutionRoleProps {
+  name: string;
   region: string;
   domain?: CloudwatchSubscriptionExecutionRoleDomainProps;
   tags: Tags;
@@ -23,7 +24,7 @@ class CloudwatchSubscriptionExecutionRole extends Construct {
   ) {
     super(scope, id);
 
-    const iamName = `CWOSSub_${props.region}_${id}`;
+    const iamName = `CWOSSub_${props.name}_${props.region}_${id}`;
 
     const policyDoc = `{
             "Version": "2012-10-17",

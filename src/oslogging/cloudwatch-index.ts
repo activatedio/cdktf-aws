@@ -8,6 +8,7 @@ import {
 import {CloudwatchSubscriptionFunction} from './cloudwatch-subscription-function';
 
 interface CloudwatchForwarderProps {
+  name: string;
   vpcId: string;
   accountNumber: string;
   subnetIds: string[];
@@ -39,6 +40,7 @@ class CloudwatchForwarder extends Construct {
     super(scope, id);
 
     const roleProps: CloudwatchSubscriptionExecutionRoleProps = {
+      name: props.name,
       region: props.region,
       tags: props.tags,
     };
@@ -60,6 +62,7 @@ class CloudwatchForwarder extends Construct {
       const target = props.targets[i];
 
       const func = new CloudwatchSubscriptionFunction(this, `cwsf-${id}-${i}`, {
+        name: props.name,
         roleArn: role.role.arn,
         vpcId: props.vpcId,
         subnetIds: props.subnetIds,

@@ -5,6 +5,7 @@ import {AssetType, TerraformAsset} from 'cdktf';
 import path = require('path');
 
 interface CloudwatchSubscriptionFunctionProps {
+  name: string;
   egressCidr: string;
   vpcId: string;
   subnetIds: string[];
@@ -63,7 +64,7 @@ class CloudwatchSubscriptionFunction extends Construct {
       this,
       'function',
       {
-        functionName: `CloudWatchToOpenSearch_${id}`,
+        functionName: `CloudWatchToOpenSearch_${props.name}`,
         runtime: 'nodejs16.x',
         handler: 'index.handler',
         filename: asset.path,
