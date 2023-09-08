@@ -62,7 +62,7 @@ class CloudwatchForwarder extends Construct {
       const target = props.targets[i];
 
       const func = new CloudwatchSubscriptionFunction(this, `cwsf-${id}-${i}`, {
-        name: props.name,
+        name: `${props.name}_${i}`,
         roleArn: role.role.arn,
         vpcId: props.vpcId,
         subnetIds: props.subnetIds,
