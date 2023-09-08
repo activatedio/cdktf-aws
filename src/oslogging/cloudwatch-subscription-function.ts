@@ -57,7 +57,7 @@ class CloudwatchSubscriptionFunction extends Construct {
 
     if (props.elasticApiKey) {
       variables['API_KEY'] = props.elasticApiKey;
-    };
+    }
 
     this.lambdaFunction = new aws.lambdaFunction.LambdaFunction(
       this,

@@ -3,7 +3,6 @@ import {Construct} from 'constructs';
 
 interface PrivateBucketProps {
   bucketConfig: aws.s3Bucket.S3BucketConfig;
-  acl?: string;
   enableVersioning?: boolean;
 }
 
@@ -30,13 +29,6 @@ class PrivateBucket extends Construct {
         restrictPublicBuckets: true,
       }
     );
-
-    if (props.acl) {
-      new aws.s3BucketAcl.S3BucketAcl(this, `bucketAcl_${id}`, {
-        bucket: this.bucket.id,
-        acl: props.acl,
-      });
-    }
 
     new aws.s3BucketServerSideEncryptionConfiguration.S3BucketServerSideEncryptionConfigurationA(
       this,

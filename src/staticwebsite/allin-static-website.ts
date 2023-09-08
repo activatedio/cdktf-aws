@@ -16,6 +16,7 @@ interface AllInCertificate {
 }
 
 interface AllInWebsiteProps {
+  accountId: string;
   aliases?: string[];
   resolutionHostnames?: AllInResolutionHostname[];
   certificateArn?: string;
@@ -55,6 +56,7 @@ class AllInWebsite extends Construct {
     }
 
     this.staticWebsite = new StaticWebsite(this, id, {
+      accountId: props.accountId,
       aliases: props.aliases,
       tags: props.tags,
       viewerCertificate: viewerCert,
