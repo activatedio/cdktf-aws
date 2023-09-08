@@ -1,2 +1,3 @@
 build/
-src/oslogging/lambda-forwarder
+src/oslogging/lambda-forwarder-aws
+src/oslogging/lambda-forwarder-elastic
