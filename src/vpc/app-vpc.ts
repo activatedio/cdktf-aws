@@ -22,6 +22,7 @@ interface AppVpcProps {
   networkAcls?: {[key: string]: SubnetAclProps};
   serviceSubnetTags?: {[key: string]: string};
   publicSubnetTags?: {[key: string]: string};
+  enableDnsEndpoints?: boolean;
   dnsClientCidrs?: string[];
   dnsDelegatedZones?: DelegatedZoneProps[];
   keyName?: string;
@@ -160,40 +161,42 @@ class AppVpc extends Vpc {
       });
     }
 
-    let dnsClientCidrs = [props.cidr];
+    if (props.enableDnsEndpoints) {
+      let dnsClientCidrs = [props.cidr];
 
-    if (props.dnsClientCidrs) {
-      dnsClientCidrs = [...dnsClientCidrs, ...props.dnsClientCidrs];
-    }
-
-    const endpoints = new DnsEndpoints(this, 'dnsEndpoints', {
-      prefix: id,
-      clientCidrs: dnsClientCidrs,
-      forwarders: [resolverIP],
-      subnetIds: this.subnets[SERVICE].map(s => s.id),
-      delegatedZones: props.dnsDelegatedZones,
-      keyName: props.keyName,
-      tags: props.tags,
-      vpcId: this.vpc.id,
-    });
-
-    const dhcpOptions = new aws.vpcDhcpOptions.VpcDhcpOptions(
-      this,
-      'dhcpOptions',
-      {
-        domainNameServers: endpoints.addresses,
-        tags: props.tags.getTags(),
+      if (props.dnsClientCidrs) {
+        dnsClientCidrs = [...dnsClientCidrs, ...props.dnsClientCidrs];
       }
-    );
 
-    new aws.vpcDhcpOptionsAssociation.VpcDhcpOptionsAssociation(
-      this,
-      'dhcpOptionsAssociation',
-      {
+      const endpoints = new DnsEndpoints(this, 'dnsEndpoints', {
+        prefix: id,
+        clientCidrs: dnsClientCidrs,
+        forwarders: [resolverIP],
+        subnetIds: this.subnets[SERVICE].map(s => s.id),
+        delegatedZones: props.dnsDelegatedZones,
+        keyName: props.keyName,
+        tags: props.tags,
         vpcId: this.vpc.id,
-        dhcpOptionsId: dhcpOptions.id,
-      }
-    );
+      });
+
+      const dhcpOptions = new aws.vpcDhcpOptions.VpcDhcpOptions(
+        this,
+        'dhcpOptions',
+        {
+          domainNameServers: endpoints.addresses,
+          tags: props.tags.getTags(),
+        }
+      );
+
+      new aws.vpcDhcpOptionsAssociation.VpcDhcpOptionsAssociation(
+        this,
+        'dhcpOptionsAssociation',
+        {
+          vpcId: this.vpc.id,
+          dhcpOptionsId: dhcpOptions.id,
+        }
+      );
+    }
   }
 }
 
