@@ -26,6 +26,8 @@ interface AppVpcProps {
   dnsClientCidrs?: string[];
   dnsDelegatedZones?: DelegatedZoneProps[];
   keyName?: string;
+  // "all", "single"
+  natGatewayAllocation?: string;
   tags: Tags;
 }
 
@@ -111,25 +113,47 @@ class AppVpc extends Vpc {
       }
     );
 
+    if (props.natGatewayAllocation) {
+      if (props.natGatewayAllocation === 'all') {
+        for (let i = 0; i < this.subnets[PUBLIC].length; i++) {
+          const subnet = this.subnets[PUBLIC][i];
+
+          const eip = new aws.eip.Eip(this, `eip-ngw-main-${i}`, {
+            tags: props.tags.withName(`NGW ${i}`).getTags(),
+          });
+
+          const ngw = new aws.natGateway.NatGateway(this, `ngw-main-${i}`, {
+            allocationId: eip.allocationId,
+            subnetId: subnet.id,
+            tags: props.tags.withName(`Main ${i}`).getTags(),
+          });
+
+          this.natGateways.push(ngw);
+        }
+      } else if (props.natGatewayAllocation === 'single') {
+        const subnet = this.subnets[PUBLIC][0];
+
+        const eip = new aws.eip.Eip(this, 'eip-ngw-main', {
+          tags: props.tags.withName('NGW').getTags(),
+        });
+
+        const ngw = new aws.natGateway.NatGateway(this, 'ngw-main', {
+          allocationId: eip.allocationId,
+          subnetId: subnet.id,
+          tags: props.tags.withName('Main').getTags(),
+        });
+
+        this.natGateways.push(ngw);
+      }
+    }
+
     for (let i = 0; i < this.subnets[PUBLIC].length; i++) {
-      const subnet = this.subnets[PUBLIC][i];
-
-      const eip = new aws.eip.Eip(this, `eip-ngw-main-${i}`, {
-        tags: props.tags.withName(`NGW ${i}`).getTags(),
-      });
-
-      const ngw = new aws.natGateway.NatGateway(this, `ngw-main-${i}`, {
-        allocationId: eip.allocationId,
-        subnetId: subnet.id,
-        tags: props.tags.withName(`Main ${i}`).getTags(),
-      });
+      const ngwId = this.natGateways[i % this.natGateways.length].id;
 
       this.addRoute('natEgress', i, 'egress-gw', {
         destinationCidrBlock: '0.0.0.0/0',
-        natGatewayId: ngw.id,
+        natGatewayId: ngwId,
       });
-
-      this.natGateways.push(ngw);
     }
 
     this.addRoute('igwEgress', 0, 'egress-gw', {
