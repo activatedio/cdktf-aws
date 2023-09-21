@@ -9,6 +9,7 @@ interface NodeGroupProps {
   desiredSize: number;
   maxSize: number;
   minSize: number;
+  amiType?: string;
   instanceTypes: string[];
   diskSize?: number;
   capacityType?: string;
@@ -216,7 +217,7 @@ class Cluster extends Construct {
           instanceTypes: nodeGroupProps.instanceTypes,
           diskSize: nodeGroupProps.diskSize,
           capacityType: nodeGroupProps.capacityType,
-
+          amiType: nodeGroupProps.amiType,
           scalingConfig: {
             desiredSize: nodeGroupProps.desiredSize,
             maxSize: nodeGroupProps.maxSize,
