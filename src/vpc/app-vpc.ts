@@ -145,15 +145,15 @@ class AppVpc extends Vpc {
 
         this.natGateways.push(ngw);
       }
-    }
 
-    for (let i = 0; i < this.subnets[PUBLIC].length; i++) {
-      const ngwId = this.natGateways[i % this.natGateways.length].id;
+      for (let i = 0; i < this.subnets[PUBLIC].length; i++) {
+        const ngwId = this.natGateways[i % this.natGateways.length].id;
 
-      this.addRoute('natEgress', i, 'egress-gw', {
-        destinationCidrBlock: '0.0.0.0/0',
-        natGatewayId: ngwId,
-      });
+        this.addRoute('natEgress', i, 'egress-gw', {
+          destinationCidrBlock: '0.0.0.0/0',
+          natGatewayId: ngwId,
+        });
+      }
     }
 
     this.addRoute('igwEgress', 0, 'egress-gw', {
