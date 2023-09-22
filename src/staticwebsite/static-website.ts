@@ -125,6 +125,9 @@ class StaticWebsite extends Construct {
         comment: `Website: ${id}`,
 
         tags: props.tags.withName(id).getTags(),
+        lifecycle: {
+          ignoreChanges: ['origin'],
+        },
       }
     );
 
