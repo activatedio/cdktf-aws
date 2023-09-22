@@ -22,9 +22,12 @@ interface AppVpcProps {
   networkAcls?: {[key: string]: SubnetAclProps};
   serviceSubnetTags?: {[key: string]: string};
   publicSubnetTags?: {[key: string]: string};
+  enableDnsEndpoints?: boolean;
   dnsClientCidrs?: string[];
   dnsDelegatedZones?: DelegatedZoneProps[];
   keyName?: string;
+  // "all", "single"
+  natGatewayAllocation?: string;
   tags: Tags;
 }
 
@@ -110,25 +113,47 @@ class AppVpc extends Vpc {
       }
     );
 
-    for (let i = 0; i < this.subnets[PUBLIC].length; i++) {
-      const subnet = this.subnets[PUBLIC][i];
+    if (props.natGatewayAllocation) {
+      if (props.natGatewayAllocation === 'all') {
+        for (let i = 0; i < this.subnets[PUBLIC].length; i++) {
+          const subnet = this.subnets[PUBLIC][i];
 
-      const eip = new aws.eip.Eip(this, `eip-ngw-main-${i}`, {
-        tags: props.tags.withName(`NGW ${i}`).getTags(),
-      });
+          const eip = new aws.eip.Eip(this, `eip-ngw-main-${i}`, {
+            tags: props.tags.withName(`NGW ${i}`).getTags(),
+          });
 
-      const ngw = new aws.natGateway.NatGateway(this, `ngw-main-${i}`, {
-        allocationId: eip.allocationId,
-        subnetId: subnet.id,
-        tags: props.tags.withName(`Main ${i}`).getTags(),
-      });
+          const ngw = new aws.natGateway.NatGateway(this, `ngw-main-${i}`, {
+            allocationId: eip.allocationId,
+            subnetId: subnet.id,
+            tags: props.tags.withName(`Main ${i}`).getTags(),
+          });
 
-      this.addRoute('natEgress', i, 'egress-gw', {
-        destinationCidrBlock: '0.0.0.0/0',
-        natGatewayId: ngw.id,
-      });
+          this.natGateways.push(ngw);
+        }
+      } else if (props.natGatewayAllocation === 'single') {
+        const subnet = this.subnets[PUBLIC][0];
 
-      this.natGateways.push(ngw);
+        const eip = new aws.eip.Eip(this, 'eip-ngw-main', {
+          tags: props.tags.withName('NGW').getTags(),
+        });
+
+        const ngw = new aws.natGateway.NatGateway(this, 'ngw-main', {
+          allocationId: eip.allocationId,
+          subnetId: subnet.id,
+          tags: props.tags.withName('Main').getTags(),
+        });
+
+        this.natGateways.push(ngw);
+      }
+
+      for (let i = 0; i < this.subnets[PUBLIC].length; i++) {
+        const ngwId = this.natGateways[i % this.natGateways.length].id;
+
+        this.addRoute('natEgress', i, 'egress-gw', {
+          destinationCidrBlock: '0.0.0.0/0',
+          natGatewayId: ngwId,
+        });
+      }
     }
 
     this.addRoute('igwEgress', 0, 'egress-gw', {
@@ -160,40 +185,42 @@ class AppVpc extends Vpc {
       });
     }
 
-    let dnsClientCidrs = [props.cidr];
+    if (props.enableDnsEndpoints) {
+      let dnsClientCidrs = [props.cidr];
 
-    if (props.dnsClientCidrs) {
-      dnsClientCidrs = [...dnsClientCidrs, ...props.dnsClientCidrs];
-    }
-
-    const endpoints = new DnsEndpoints(this, 'dnsEndpoints', {
-      prefix: id,
-      clientCidrs: dnsClientCidrs,
-      forwarders: [resolverIP],
-      subnetIds: this.subnets[SERVICE].map(s => s.id),
-      delegatedZones: props.dnsDelegatedZones,
-      keyName: props.keyName,
-      tags: props.tags,
-      vpcId: this.vpc.id,
-    });
-
-    const dhcpOptions = new aws.vpcDhcpOptions.VpcDhcpOptions(
-      this,
-      'dhcpOptions',
-      {
-        domainNameServers: endpoints.addresses,
-        tags: props.tags.getTags(),
+      if (props.dnsClientCidrs) {
+        dnsClientCidrs = [...dnsClientCidrs, ...props.dnsClientCidrs];
       }
-    );
 
-    new aws.vpcDhcpOptionsAssociation.VpcDhcpOptionsAssociation(
-      this,
-      'dhcpOptionsAssociation',
-      {
+      const endpoints = new DnsEndpoints(this, 'dnsEndpoints', {
+        prefix: id,
+        clientCidrs: dnsClientCidrs,
+        forwarders: [resolverIP],
+        subnetIds: this.subnets[SERVICE].map(s => s.id),
+        delegatedZones: props.dnsDelegatedZones,
+        keyName: props.keyName,
+        tags: props.tags,
         vpcId: this.vpc.id,
-        dhcpOptionsId: dhcpOptions.id,
-      }
-    );
+      });
+
+      const dhcpOptions = new aws.vpcDhcpOptions.VpcDhcpOptions(
+        this,
+        'dhcpOptions',
+        {
+          domainNameServers: endpoints.addresses,
+          tags: props.tags.getTags(),
+        }
+      );
+
+      new aws.vpcDhcpOptionsAssociation.VpcDhcpOptionsAssociation(
+        this,
+        'dhcpOptionsAssociation',
+        {
+          vpcId: this.vpc.id,
+          dhcpOptionsId: dhcpOptions.id,
+        }
+      );
+    }
   }
 }
 
