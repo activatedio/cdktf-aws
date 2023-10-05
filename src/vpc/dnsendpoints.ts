@@ -125,7 +125,7 @@ options {
   allow-query { goodclients; };
 
   forwarders {
-${props.forwarders.map(c => `  ${c};\n`)}
+${props.forwarders.map(c => `  ${c};`).join('\n')}
   };
   forward only;
 
@@ -135,14 +135,16 @@ ${props.forwarders.map(c => `  ${c};\n`)}
   listen-on-v6 { any; };
 };
 
-${delegatedZones.map(
-  dz => `
+${delegatedZones
+  .map(
+    dz => `
 zone "${dz.name}" {
   type forward;
   forwarders { ${dz.nameservers.join(';')}; };
 };
 `
-)}
+  )
+  .join('\n')}
 
 EOF
 
