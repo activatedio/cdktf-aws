@@ -69,6 +69,7 @@ class CloudwatchSubscriptionFunction extends Construct {
         handler: 'index.handler',
         filename: asset.path,
         role: props.roleArn,
+        sourceCodeHash: asset.assetHash,
         environment: {
           variables: variables,
         },
