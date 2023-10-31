@@ -7,7 +7,7 @@
   "scripts": {
     "prepublish": "tsc",
     "build": "tsc && yarn copy-files",
-    "copy-files": "mkdir --parents ./build/src/oslogging/lambda-forwarder-aws && cp src/oslogging/lambda-forwarder-aws/* ./build/src/oslogging/lambda-forwarder-aws/ && mkdir --parents ./build/src/oslogging/lambda-forwarder-elastic && cp src/oslogging/lambda-forwarder-elastic/* ./build/src/oslogging/lambda-forwarder-elastic/",
+    "copy-files": "mkdir -p ./build/src/oslogging/lambda-forwarder-aws && cp src/oslogging/lambda-forwarder-aws/* ./build/src/oslogging/lambda-forwarder-aws/ && mkdir --parents ./build/src/oslogging/lambda-forwarder-elastic && cp src/oslogging/lambda-forwarder-elastic/* ./build/src/oslogging/lambda-forwarder-elastic/",
     "test": "jest",
     "test:watch": "jest --watch",
     "lint": "gts lint",
