@@ -10,7 +10,7 @@ const apiKey = process.env.API_KEY;
 // Set this to true if you want to debug why data isn't making it to
 // your Elasticsearch cluster. This will enable logging of failed items
 // to CloudWatch Logs.
-const logFailedResponses = false;
+const logFailedResponses = true;
 
 exports.handler = function (input, context) {
   // decode input from base64
@@ -108,19 +108,33 @@ function buildSource(message, extractedFields) {
         if (jsonSubString !== null) {
           source['$' + key] = JSON.parse(jsonSubString);
         }
-
-        source[key] = value;
+        const dotReplacedKey = key.replaceAll(".", "_");
+        source[dotReplacedKey] = value;
       }
     }
     return source;
   }
-
   var jsonSubString = extractJson(message);
   if (jsonSubString !== null) {
-    return JSON.parse(jsonSubString);
+    const parsedSubString = JSON.parse(jsonSubString);
+    removeDotNotationFromKeys(parsedSubString);
+    return parsedSubString
   }
 
   return {};
+}
+
+function removeDotNotationFromKeys(obj) {
+  Object.keys(obj).forEach((key) => {
+    const newKeyName = key.replaceAll(".", "_");
+    if(newKeyName !== key) {
+      obj[newKeyName] = obj[key];
+      delete obj[key];
+    }
+    if(typeof obj[newKeyName] === "object") {
+      removeDotNotationFromKeys(obj[newKeyName]);
+    }
+  });
 }
 
 function extractJson(message) {
