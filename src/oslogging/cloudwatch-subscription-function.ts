@@ -11,10 +11,12 @@ interface CloudwatchSubscriptionFunctionProps {
   subnetIds: string[];
   roleArn: string;
   osEndpoint: string;
-  // 'aws', 'elastic'
+  // 'aws', 'elastic', 'logstash'
   osType: string;
   elasticApiKey?: string;
-  indexPrefix: string;
+  username?: string;
+  password?: string;
+  indexPrefix?: string;
   tags: Tags;
 }
 
@@ -53,11 +55,18 @@ class CloudwatchSubscriptionFunction extends Construct {
 
     const variables: any = {
       OS_ENDPOINT: props.osEndpoint,
-      INDEX_PREFIX: props.indexPrefix,
     };
-
+    if (props.indexPrefix) {
+      variables['INDEX_PREFIX'] = props.indexPrefix;
+    }
     if (props.elasticApiKey) {
       variables['API_KEY'] = props.elasticApiKey;
+    }
+    if (props.username) {
+      variables['LOGSTASH_USERNAME'] = props.username;
+    }
+    if (props.password) {
+      variables['LOGSTASH_PASSWORD'] = props.password;
     }
 
     this.lambdaFunction = new aws.lambdaFunction.LambdaFunction(
