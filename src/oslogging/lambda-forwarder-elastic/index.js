@@ -10,7 +10,7 @@ const apiKey = process.env.API_KEY;
 // Set this to true if you want to debug why data isn't making it to
 // your Elasticsearch cluster. This will enable logging of failed items
 // to CloudWatch Logs.
-const logFailedResponses = false;
+const logFailedResponses = true;
 
 exports.handler = function (input, context) {
   // decode input from base64
@@ -81,9 +81,9 @@ function transform(payload) {
     source['@log_group'] = payload.logGroup;
     source['@log_stream'] = payload.logStream;
 
-    const action = {index: {}};
-    action.index._index = indexName;
-    action.index._id = logEvent.id;
+    const action = {create: {}};
+    action.create._index = indexName;
+    action.create._id = logEvent.id;
 
     bulkRequestBody +=
       [JSON.stringify(action), JSON.stringify(source)].join('\n') + '\n';
@@ -108,19 +108,33 @@ function buildSource(message, extractedFields) {
         if (jsonSubString !== null) {
           source['$' + key] = JSON.parse(jsonSubString);
         }
-
-        source[key] = value;
+        const dotReplacedKey = key.replaceAll(".", "_");
+        source[dotReplacedKey] = value;
       }
     }
     return source;
   }
-
   var jsonSubString = extractJson(message);
   if (jsonSubString !== null) {
-    return JSON.parse(jsonSubString);
+    const parsedSubString = JSON.parse(jsonSubString);
+    removeDotNotationFromKeys(parsedSubString);
+    return parsedSubString
   }
 
   return {};
+}
+
+function removeDotNotationFromKeys(obj) {
+  Object.keys(obj).forEach((key) => {
+    const newKeyName = key.replaceAll(".", "_");
+    if(newKeyName !== key) {
+      obj[newKeyName] = obj[key];
+      delete obj[key];
+    }
+    if(typeof obj[newKeyName] === "object") {
+      removeDotNotationFromKeys(obj[newKeyName]);
+    }
+  });
 }
 
 function extractJson(message) {
@@ -161,7 +175,7 @@ function post(body, callback) {
 
         if (response.statusCode >= 200 && response.statusCode < 299) {
           failedItems = info.items.filter(x => {
-            return x.index.status >= 300;
+            return x.create.status >= 300;
           });
 
           success = {

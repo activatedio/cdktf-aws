@@ -80,9 +80,9 @@ function transform(payload) {
     source['@log_group'] = payload.logGroup;
     source['@log_stream'] = payload.logStream;
 
-    const action = {index: {}};
-    action.index._index = indexName;
-    action.index._id = logEvent.id;
+    const action = {create: {}};
+    action.create._index = indexName;
+    action.create._id = logEvent.id;
 
     bulkRequestBody +=
       [JSON.stringify(action), JSON.stringify(source)].join('\n') + '\n';
@@ -160,7 +160,7 @@ function post(body, callback) {
 
         if (response.statusCode >= 200 && response.statusCode < 299) {
           failedItems = info.items.filter(x => {
-            return x.index.status >= 300;
+            return x.create.status >= 300;
           });
 
           success = {

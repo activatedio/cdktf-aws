@@ -20,19 +20,20 @@ interface CloudwatchForwarderProps {
   // required if osType is 'aws'
   osDomainName?: string;
   elasticApiKey?: string;
+  username?: string;
+  password?: string;
   targets: CloudwatchForwarderTargetProps[];
   tags: Tags;
 }
 
 interface CloudwatchForwarderTargetProps {
-  indexPrefix: string;
+  indexPrefix?: string;
   sources: CloudwatchForwarderSourceProps[];
 }
 
 interface CloudwatchForwarderSourceProps {
   logGroupName: string;
   filterPattern: string;
-  //indexPrefix: string;
 }
 
 class CloudwatchForwarder extends Construct {
@@ -71,6 +72,8 @@ class CloudwatchForwarder extends Construct {
         osType: props.osType,
         osEndpoint: props.osEndpoint,
         elasticApiKey: props.elasticApiKey,
+        password: props.password,
+        username: props.username,
         indexPrefix: target.indexPrefix,
       });
 
