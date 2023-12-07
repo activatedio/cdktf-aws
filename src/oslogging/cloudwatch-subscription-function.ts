@@ -13,6 +13,7 @@ interface CloudwatchSubscriptionFunctionProps {
   osEndpoint: string;
   // 'aws', 'elastic', 'logstash'
   osType: string;
+  useDataStream?: boolean;
   elasticApiKey?: string;
   username?: string;
   password?: string;
@@ -67,6 +68,9 @@ class CloudwatchSubscriptionFunction extends Construct {
     }
     if (props.password) {
       variables['LOGSTASH_PASSWORD'] = props.password;
+    }
+    if (props.useDataStream) {
+      variables['USE_DATA_STREAM'] = 'true';
     }
 
     this.lambdaFunction = new aws.lambdaFunction.LambdaFunction(

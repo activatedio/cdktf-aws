@@ -19,6 +19,7 @@ interface CloudwatchForwarderProps {
   osEndpoint: string;
   // required if osType is 'aws'
   osDomainName?: string;
+  useDataStream?: boolean;
   elasticApiKey?: string;
   username?: string;
   password?: string;
@@ -72,6 +73,7 @@ class CloudwatchForwarder extends Construct {
         osType: props.osType,
         osEndpoint: props.osEndpoint,
         elasticApiKey: props.elasticApiKey,
+        useDataStream: props.useDataStream,
         password: props.password,
         username: props.username,
         indexPrefix: target.indexPrefix,

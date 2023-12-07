@@ -6,6 +6,7 @@ const crypto = require('crypto');
 const endpoint = process.env.OS_ENDPOINT;
 const indexPrefix = process.env.INDEX_PREFIX;
 const apiKey = process.env.API_KEY;
+const useDataStream = process.env.USE_DATA_STREAM;
 
 // Set this to true if you want to debug why data isn't making it to
 // your Elasticsearch cluster. This will enable logging of failed items
@@ -66,12 +67,15 @@ function transform(payload) {
   payload.logEvents.forEach(logEvent => {
     const timestamp = new Date(1 * logEvent.timestamp);
 
+    var indexName = indexPrefix;
     // index name format: cwl-YYYY.MM.DD
-    const indexName = [
-      indexPrefix + '-' + timestamp.getUTCFullYear(), // year
-      ('0' + (timestamp.getUTCMonth() + 1)).slice(-2), // month
-      ('0' + timestamp.getUTCDate()).slice(-2), // day
-    ].join('.');
+    if (useDataStream !== "true") {
+      indexName = [
+        indexPrefix + '-' + timestamp.getUTCFullYear(), // year
+        ('0' + (timestamp.getUTCMonth() + 1)).slice(-2), // month
+        ('0' + timestamp.getUTCDate()).slice(-2), // day
+      ].join('.');
+    }
 
     const source = buildSource(logEvent.message, logEvent.extractedFields);
     source['@id'] = logEvent.id;
