@@ -36,7 +36,7 @@ class CloudwatchSubscriptionFunction extends Construct {
       'securityGroup',
       {
         vpcId: props.vpcId,
-        name: `logging-function-${id}`,
+        name: `log-fn-${id}-${props.indexPrefix}`,
         tags: props.tags.getTags(),
         egress: [
           {
