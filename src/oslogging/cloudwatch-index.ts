@@ -23,6 +23,7 @@ interface CloudwatchForwarderProps {
   elasticApiKey?: string;
   username?: string;
   password?: string;
+  applySubscription?: boolean;
   targets: CloudwatchForwarderTargetProps[];
   tags: Tags;
 }
@@ -93,20 +94,21 @@ class CloudwatchForwarder extends Construct {
           sourceArn: `arn:aws:logs:${props.region}:${props.accountNumber}:log-group:${source.logGroupName}:*`,
           sourceAccount: props.accountNumber,
         });
+        if(props.applySubscription) {
+          const sf =
+            new aws.cloudwatchLogSubscriptionFilter.CloudwatchLogSubscriptionFilter(
+              this,
+              subName,
+              {
+                name: subName,
+                filterPattern: source.filterPattern,
+                destinationArn: func.lambdaFunction.arn,
+                logGroupName: source.logGroupName,
+              }
+            );
 
-        const sf =
-          new aws.cloudwatchLogSubscriptionFilter.CloudwatchLogSubscriptionFilter(
-            this,
-            subName,
-            {
-              name: subName,
-              filterPattern: source.filterPattern,
-              destinationArn: func.lambdaFunction.arn,
-              logGroupName: source.logGroupName,
-            }
-          );
-
-        sf.node.addDependency(lp);
+          sf.node.addDependency(lp);
+        }
       }
     }
   }
