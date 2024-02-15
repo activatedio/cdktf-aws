@@ -4,6 +4,7 @@ import {Construct} from 'constructs';
 interface PrivateBucketProps {
   bucketConfig: aws.s3Bucket.S3BucketConfig;
   enableVersioning?: boolean;
+  acl?: string;
 }
 
 class PrivateBucket extends Construct {
