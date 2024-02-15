@@ -32,9 +32,22 @@ class PrivateBucket extends Construct {
     );
 
     if (props.acl) {
+      const controls =
+        new aws.s3BucketOwnershipControls.S3BucketOwnershipControls(
+          this,
+          `bucketOwnershiopControls_${id}`,
+          {
+            bucket: this.bucket.id,
+            rule: {
+              objectOwnership: 'BucketOwnerPreferred',
+            },
+          }
+        );
+
       new aws.s3BucketAcl.S3BucketAcl(this, `bucketAcl_${id}`, {
         bucket: this.bucket.id,
         acl: props.acl,
+        dependsOn: [controls],
       });
     }
 

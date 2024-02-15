@@ -70,7 +70,12 @@ class Vpc extends Construct {
           new aws.routeTable.RouteTable(this, `rt-${name}-${i}`, {
             vpcId: this.vpc.id,
             route: rtProps.routes,
-            tags: props.tags.withName(`${name}-${i}`).getTags(),
+            tags: props.tags
+              .withTags({
+                class: name,
+              })
+              .withName(`${name}-${i}`)
+              .getTags(),
           })
         );
       }
