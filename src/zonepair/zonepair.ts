@@ -6,6 +6,7 @@ interface ZonePairProps {
   vpcId: string;
   name: string;
   skipPublic?: boolean;
+  ignoreChanges?: string[];
   tags: Tags;
 }
 
@@ -24,12 +25,18 @@ class ZonePair extends Construct {
           vpcId: props.vpcId,
         },
       ],
+      lifecycle: {
+        ignoreChanges: props.ignoreChanges,
+      },
     });
 
     if (!props.skipPublic) {
       this.publicZone = new aws.route53Zone.Route53Zone(this, 'public', {
         name: props.name,
         tags: props.tags.getTags(),
+        lifecycle: {
+          ignoreChanges: props.ignoreChanges,
+        },
       });
     }
   }

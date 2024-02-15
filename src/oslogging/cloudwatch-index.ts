@@ -8,6 +8,7 @@ import {
 import {CloudwatchSubscriptionFunction} from './cloudwatch-subscription-function';
 
 interface CloudwatchForwarderProps {
+  name: string;
   vpcId: string;
   accountNumber: string;
   subnetIds: string[];
@@ -18,20 +19,23 @@ interface CloudwatchForwarderProps {
   osEndpoint: string;
   // required if osType is 'aws'
   osDomainName?: string;
+  useDataStream?: boolean;
   elasticApiKey?: string;
+  username?: string;
+  password?: string;
+  applySubscription?: boolean;
   targets: CloudwatchForwarderTargetProps[];
   tags: Tags;
 }
 
 interface CloudwatchForwarderTargetProps {
-  indexPrefix: string;
+  indexPrefix?: string;
   sources: CloudwatchForwarderSourceProps[];
 }
 
 interface CloudwatchForwarderSourceProps {
   logGroupName: string;
   filterPattern: string;
-  //indexPrefix: string;
 }
 
 class CloudwatchForwarder extends Construct {
@@ -39,6 +43,7 @@ class CloudwatchForwarder extends Construct {
     super(scope, id);
 
     const roleProps: CloudwatchSubscriptionExecutionRoleProps = {
+      name: props.name,
       region: props.region,
       tags: props.tags,
     };
@@ -60,6 +65,7 @@ class CloudwatchForwarder extends Construct {
       const target = props.targets[i];
 
       const func = new CloudwatchSubscriptionFunction(this, `cwsf-${id}-${i}`, {
+        name: `${props.name}_${i}`,
         roleArn: role.role.arn,
         vpcId: props.vpcId,
         subnetIds: props.subnetIds,
@@ -68,6 +74,9 @@ class CloudwatchForwarder extends Construct {
         osType: props.osType,
         osEndpoint: props.osEndpoint,
         elasticApiKey: props.elasticApiKey,
+        useDataStream: props.useDataStream,
+        password: props.password,
+        username: props.username,
         indexPrefix: target.indexPrefix,
       });
 
@@ -85,20 +94,21 @@ class CloudwatchForwarder extends Construct {
           sourceArn: `arn:aws:logs:${props.region}:${props.accountNumber}:log-group:${source.logGroupName}:*`,
           sourceAccount: props.accountNumber,
         });
+        if(props.applySubscription) {
+          const sf =
+            new aws.cloudwatchLogSubscriptionFilter.CloudwatchLogSubscriptionFilter(
+              this,
+              subName,
+              {
+                name: subName,
+                filterPattern: source.filterPattern,
+                destinationArn: func.lambdaFunction.arn,
+                logGroupName: source.logGroupName,
+              }
+            );
 
-        const sf =
-          new aws.cloudwatchLogSubscriptionFilter.CloudwatchLogSubscriptionFilter(
-            this,
-            subName,
-            {
-              name: subName,
-              filterPattern: source.filterPattern,
-              destinationArn: func.lambdaFunction.arn,
-              logGroupName: source.logGroupName,
-            }
-          );
-
-        sf.node.addDependency(lp);
+          sf.node.addDependency(lp);
+        }
       }
     }
   }

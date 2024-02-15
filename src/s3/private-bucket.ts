@@ -3,7 +3,6 @@ import {Construct} from 'constructs';
 
 interface PrivateBucketProps {
   bucketConfig: aws.s3Bucket.S3BucketConfig;
-  acl?: string;
   enableVersioning?: boolean;
 }
 

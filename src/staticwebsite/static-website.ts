@@ -6,6 +6,7 @@ import {PrivateBucket} from '../s3';
 import {DefaultDocumentFunction} from './functions';
 
 interface StaticWebsiteProps {
+  accountId: string;
   viewerCertificate?: aws.cloudfrontDistribution.CloudfrontDistributionViewerCertificate;
   customErrorResponses?: aws.cloudfrontDistribution.CloudfrontDistributionCustomErrorResponse[];
   restrictions?: aws.cloudfrontDistribution.CloudfrontDistributionRestrictions;
@@ -30,7 +31,6 @@ class StaticWebsite extends Construct {
         bucketPrefix: logsName,
         tags: props.tags.withName(logsName).getTags(),
       },
-      acl: 'log-delivery-write',
       enableVersioning: true,
     });
 
@@ -43,36 +43,7 @@ class StaticWebsite extends Construct {
         },
         tags: props.tags.withName(sourceName).getTags(),
       },
-      acl: 'private',
       enableVersioning: true,
-    });
-
-    const identity =
-      new aws.cloudfrontOriginAccessIdentity.CloudfrontOriginAccessIdentity(
-        this,
-        'identity',
-        {}
-      );
-
-    new aws.s3BucketPolicy.S3BucketPolicy(this, 'bucketPolicy', {
-      bucket: this.sourceBucket.bucket.id,
-      policy: `{
-        "Version": "2012-10-17",
-        "Statement": [
-            {
-                "Sid": "1",
-                "Effect": "Allow",
-                "Principal": {
-                    "AWS": "${identity.iamArn}"
-                },
-                "Action": [
-                    "s3:GetObject"
-                ],
-                "Resource": "${this.sourceBucket.bucket.arn}/*"
-            }
-        ]
-    }
-      `,
     });
 
     const restrictions: aws.cloudfrontDistribution.CloudfrontDistributionRestrictions =
@@ -143,18 +114,10 @@ class StaticWebsite extends Construct {
         enabled: true,
         httpVersion: 'http2',
         isIpv6Enabled: true,
-        loggingConfig: {
-          includeCookies: false,
-          bucket: this.logsBucket.bucket.bucketRegionalDomainName,
-          prefix: 'cloudfront-logs',
-        },
         origin: [
           {
             domainName: this.sourceBucket.bucket.bucketRegionalDomainName,
             originId: 'origin1',
-            s3OriginConfig: {
-              originAccessIdentity: identity.cloudfrontAccessIdentityPath,
-            },
           },
         ],
         priceClass: 'PriceClass_100',
@@ -162,8 +125,37 @@ class StaticWebsite extends Construct {
         comment: `Website: ${id}`,
 
         tags: props.tags.withName(id).getTags(),
+        lifecycle: {
+          ignoreChanges: ['origin'],
+        },
       }
     );
+
+    new aws.s3BucketPolicy.S3BucketPolicy(this, 'bucketPolicy', {
+      bucket: this.sourceBucket.bucket.id,
+      policy: `{
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Sid": "1",
+                "Effect": "Allow",
+                "Principal": {
+                    "Service": "cloudfront.amazonaws.com"
+                },
+                "Action": [
+                    "s3:GetObject"
+                ],
+                "Resource": "${this.sourceBucket.bucket.arn}/*",
+                "Condition": {
+                    "StringEquals": {
+                        "AWS:SourceArn": "arn:aws:cloudfront::${props.accountId}:distribution/${this.distribution.id}"
+                    }
+                }
+            }
+        ]
+    }
+      `,
+    });
   }
 }
 

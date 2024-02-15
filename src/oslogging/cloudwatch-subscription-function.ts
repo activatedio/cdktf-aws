@@ -5,15 +5,19 @@ import {AssetType, TerraformAsset} from 'cdktf';
 import path = require('path');
 
 interface CloudwatchSubscriptionFunctionProps {
+  name: string;
   egressCidr: string;
   vpcId: string;
   subnetIds: string[];
   roleArn: string;
   osEndpoint: string;
-  // 'aws', 'elastic'
+  // 'aws', 'elastic', 'logstash'
   osType: string;
+  useDataStream?: boolean;
   elasticApiKey?: string;
-  indexPrefix: string;
+  username?: string;
+  password?: string;
+  indexPrefix?: string;
   tags: Tags;
 }
 
@@ -32,7 +36,7 @@ class CloudwatchSubscriptionFunction extends Construct {
       'securityGroup',
       {
         vpcId: props.vpcId,
-        name: `logging-function-${id}`,
+        name: `log-fn-${id}-${props.indexPrefix}`,
         tags: props.tags.getTags(),
         egress: [
           {
@@ -52,22 +56,33 @@ class CloudwatchSubscriptionFunction extends Construct {
 
     const variables: any = {
       OS_ENDPOINT: props.osEndpoint,
-      INDEX_PREFIX: props.indexPrefix,
     };
-
+    if (props.indexPrefix) {
+      variables['INDEX_PREFIX'] = props.indexPrefix;
+    }
     if (props.elasticApiKey) {
       variables['API_KEY'] = props.elasticApiKey;
-    };
+    }
+    if (props.username) {
+      variables['LOGSTASH_USERNAME'] = props.username;
+    }
+    if (props.password) {
+      variables['LOGSTASH_PASSWORD'] = props.password;
+    }
+    if (props.useDataStream) {
+      variables['USE_DATA_STREAM'] = 'true';
+    }
 
     this.lambdaFunction = new aws.lambdaFunction.LambdaFunction(
       this,
       'function',
       {
-        functionName: `CloudWatchToOpenSearch_${id}`,
+        functionName: `CloudWatchToOpenSearch_${props.name}`,
         runtime: 'nodejs16.x',
         handler: 'index.handler',
         filename: asset.path,
         role: props.roleArn,
+        sourceCodeHash: asset.assetHash,
         environment: {
           variables: variables,
         },

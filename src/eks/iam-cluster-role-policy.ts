@@ -25,6 +25,7 @@ interface IamClusterRolePolicyProps {
  * Setup IAM objects and roles for AWS ALB Controller
  */
 class IamClusterRolePolicy extends Construct {
+  public role: aws.iamRole.IamRole;
   public policies: aws.iamPolicy.IamPolicy[] = [];
 
   constructor(scope: Construct, id: string, props: IamClusterRolePolicyProps) {
@@ -52,7 +53,7 @@ class IamClusterRolePolicy extends Construct {
 
     const oidcStr = Fn.replace(props.oidcIssuer, 'https://', '');
 
-    const role = new aws.iamRole.IamRole(this, 'iamRole', {
+    this.role = new aws.iamRole.IamRole(this, 'iamRole', {
       name: props.name,
       assumeRolePolicy: `
       {
@@ -85,7 +86,7 @@ class IamClusterRolePolicy extends Construct {
         this,
         `rolePolicyAttachment_${i}`,
         {
-          role: role.id,
+          role: this.role.id,
           policyArn: policyArns[i],
         }
       );

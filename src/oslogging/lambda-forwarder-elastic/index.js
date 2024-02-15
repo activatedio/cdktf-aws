@@ -6,11 +6,12 @@ const crypto = require('crypto');
 const endpoint = process.env.OS_ENDPOINT;
 const indexPrefix = process.env.INDEX_PREFIX;
 const apiKey = process.env.API_KEY;
+const useDataStream = process.env.USE_DATA_STREAM;
 
 // Set this to true if you want to debug why data isn't making it to
 // your Elasticsearch cluster. This will enable logging of failed items
 // to CloudWatch Logs.
-const logFailedResponses = false;
+const logFailedResponses = true;
 
 exports.handler = function (input, context) {
   // decode input from base64
@@ -66,12 +67,15 @@ function transform(payload) {
   payload.logEvents.forEach(logEvent => {
     const timestamp = new Date(1 * logEvent.timestamp);
 
+    var indexName = indexPrefix;
     // index name format: cwl-YYYY.MM.DD
-    const indexName = [
-      indexPrefix + '-' + timestamp.getUTCFullYear(), // year
-      ('0' + (timestamp.getUTCMonth() + 1)).slice(-2), // month
-      ('0' + timestamp.getUTCDate()).slice(-2), // day
-    ].join('.');
+    if (useDataStream !== "true") {
+      indexName = [
+        indexPrefix + '-' + timestamp.getUTCFullYear(), // year
+        ('0' + (timestamp.getUTCMonth() + 1)).slice(-2), // month
+        ('0' + timestamp.getUTCDate()).slice(-2), // day
+      ].join('.');
+    }
 
     const source = buildSource(logEvent.message, logEvent.extractedFields);
     source['@id'] = logEvent.id;
@@ -81,9 +85,9 @@ function transform(payload) {
     source['@log_group'] = payload.logGroup;
     source['@log_stream'] = payload.logStream;
 
-    const action = {index: {}};
-    action.index._index = indexName;
-    action.index._id = logEvent.id;
+    const action = {create: {}};
+    action.create._index = indexName;
+    action.create._id = logEvent.id;
 
     bulkRequestBody +=
       [JSON.stringify(action), JSON.stringify(source)].join('\n') + '\n';
@@ -108,19 +112,33 @@ function buildSource(message, extractedFields) {
         if (jsonSubString !== null) {
           source['$' + key] = JSON.parse(jsonSubString);
         }
-
-        source[key] = value;
+        const dotReplacedKey = key.replaceAll(".", "_");
+        source[dotReplacedKey] = value;
       }
     }
     return source;
   }
-
   var jsonSubString = extractJson(message);
   if (jsonSubString !== null) {
-    return JSON.parse(jsonSubString);
+    const parsedSubString = JSON.parse(jsonSubString);
+    removeDotNotationFromKeys(parsedSubString);
+    return parsedSubString
   }
 
   return {};
+}
+
+function removeDotNotationFromKeys(obj) {
+  Object.keys(obj).forEach((key) => {
+    const newKeyName = key.replaceAll(".", "_");
+    if(newKeyName !== key) {
+      obj[newKeyName] = obj[key];
+      delete obj[key];
+    }
+    if(typeof obj[newKeyName] === "object") {
+      removeDotNotationFromKeys(obj[newKeyName]);
+    }
+  });
 }
 
 function extractJson(message) {
@@ -161,7 +179,7 @@ function post(body, callback) {
 
         if (response.statusCode >= 200 && response.statusCode < 299) {
           failedItems = info.items.filter(x => {
-            return x.index.status >= 300;
+            return x.create.status >= 300;
           });
 
           success = {
@@ -191,7 +209,6 @@ function post(body, callback) {
 }
 
 function buildRequest(endpoint, body) {
-
   return {
     host: endpoint,
     method: 'POST',
@@ -204,7 +221,6 @@ function buildRequest(endpoint, body) {
       Authorization: 'ApiKey ' + apiKey,
     },
   };
-
 }
 
 function hash(str, encoding) {
