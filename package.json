@@ -33,7 +33,7 @@
   },
   "homepage": "https://github.com/activatedio/cdktf-aws#readme",
   "peerDependencies": {
-    "@cdktf/provider-aws": "^12.0.8",
+    "@cdktf/provider-aws": "12.0.8",
     "@cdktf/provider-random": "^4.0.0",
     "cdktf": "^0.15.5",
     "constructs": "10.3.0"
