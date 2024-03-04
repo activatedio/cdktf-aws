@@ -94,7 +94,7 @@ class CloudwatchForwarder extends Construct {
           sourceArn: `arn:aws:logs:${props.region}:${props.accountNumber}:log-group:${source.logGroupName}:*`,
           sourceAccount: props.accountNumber,
         });
-        if(props.applySubscription) {
+        if (props.applySubscription) {
           const sf =
             new aws.cloudwatchLogSubscriptionFilter.CloudwatchLogSubscriptionFilter(
               this,

@@ -5,6 +5,7 @@ import {Tags} from '../tags';
 interface TwingateProps {
   domain: string;
   instances: TwingateInstanceProps[];
+  vpcId: string;
   tags: Tags;
 }
 
@@ -30,6 +31,23 @@ class Twingate extends Construct {
       mostRecent: true,
     });
 
+    const securityGroup = new aws.securityGroup.SecurityGroup(
+      this,
+      'securityGroup',
+      {
+        namePrefix: 'twingate',
+        vpcId: props.vpcId,
+        egress: [
+          {
+            fromPort: 0,
+            toPort: 0,
+            protocol: '-1',
+            cidrBlocks: ['0.0.0.0/0'],
+          },
+        ],
+      }
+    );
+
     for (let i = 0; i < props.instances.length; i++) {
       const iProps = props.instances[i];
 
@@ -53,6 +71,7 @@ sudo systemctl enable --now twingate-connector
         subnetId: iProps.subnetId,
         tags: props.tags.withName(iProps.name).getTags(),
         ami: image.id,
+        vpcSecurityGroupIds: [securityGroup.id],
         lifecycle: {
           preventDestroy: true,
           ignoreChanges: 'all',
