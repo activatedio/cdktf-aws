@@ -1,17 +1,22 @@
 import {Construct} from 'constructs';
 import * as aws from '@cdktf/provider-aws';
 import {Tags} from '../tags';
-import {createCIDR} from './cidr';
+import {CIDR, createCIDR} from './cidr';
 import {SubnetPrototypeProps, Vpc, RouteTablePrototypeProps} from './vpc';
 import {DnsEndpoints, DelegatedZoneProps} from './dnsendpoints';
 import * as dns from 'dns';
 
-interface SubnetAclProps {
+interface ISubnetAclProps {
   ingress?: aws.networkAcl.NetworkAclIngress[];
   egress?: aws.networkAcl.NetworkAclEgress[];
 }
 
-interface AppVpcProps {
+interface INetworkCidrProps {
+  thisNetworkCidr: string;
+  cidrs: {[key: string]: string};
+}
+
+interface IAppVpcProps {
   /**
    * Must be of /16
    */
@@ -19,13 +24,14 @@ interface AppVpcProps {
   availabilityZones: string[];
   extraSubnetPrototypes?: {[key: string]: SubnetPrototypeProps};
   extraRouteTablePrototypes?: {[key: string]: RouteTablePrototypeProps};
-  networkAcls?: {[key: string]: SubnetAclProps};
+  networkAcls?: {[key: string]: (props: INetworkCidrProps) => ISubnetAclProps};
   serviceSubnetTags?: {[key: string]: string};
   publicSubnetTags?: {[key: string]: string};
   enableDnsEndpoints?: boolean;
   dnsClientCidrs?: string[];
   dnsDelegatedZones?: DelegatedZoneProps[];
   keyName?: string;
+  iamInstanceProfile?: string;
   // "all", "single"
   natGatewayAllocation?: string;
   tags: Tags;
@@ -39,8 +45,8 @@ interface AppVpcProps {
  *
  * Subnets are created with the following logic
  *  - data - x.x.0.0/22
- *  - service - x.x.24.0/22
- *  - ingress - x.x.48.0/22
+ *  - service - x.x.32.0/22
+ *  - public - x.x.64.0/22
  */
 
 const PUBLIC = 'public';
@@ -51,30 +57,36 @@ class AppVpc extends Vpc {
   public readonly internetGateway: aws.internetGateway.InternetGateway;
   public readonly natGateways: aws.natGateway.NatGateway[] = [];
 
-  constructor(scope: Construct, id: string, props: AppVpcProps) {
+  constructor(scope: Construct, id: string, props: IAppVpcProps) {
     const _cidr = createCIDR(props.cidr);
     const resolverIP = _cidr.addOctet(3, 2, 32).toCidrString().split('/')[0];
     if (_cidr.mask !== 16) {
       throw new Error('cidr must have /16 mask');
     }
 
-    // We allow for up to 6 az on a subnet mask of 22 (4) (6 * 4 = 24)
-    const dataCidr = _cidr.addOctet(2, 0, 22);
-    const servicesCidr = dataCidr.addOctet(2, 24, 22);
-    const publicCidr = servicesCidr.addOctet(2, 24, 22);
+    // We allow for up to 8 az on a subnet mask of 22 (4) (6 * 4 = 32)
+    const dataNetworkCidr = _cidr.addOctet(2, 0, 19);
+    const dataSubnetCidr = _cidr.addOctet(2, 0, 22);
+    const servicesNetworkCidr = dataNetworkCidr.addOctet(2, 32, 19);
+    const servicesSubnetCidr = dataNetworkCidr.addOctet(2, 32, 22);
+    const publicNetworkCidr = servicesNetworkCidr.addOctet(2, 32, 19);
+    const publicSubnetCidr = servicesNetworkCidr.addOctet(2, 32, 22);
 
     let subnetPrototypes: {[key: string]: SubnetPrototypeProps} = {
       data: {
-        zeroCidr: dataCidr.toCidrString(),
+        networkCidr: dataNetworkCidr.toCidrString(),
+        zeroCidr: dataSubnetCidr.toCidrString(),
         routeTableName: 'noEgress',
       },
       service: {
-        zeroCidr: servicesCidr.toCidrString(),
+        networkCidr: servicesNetworkCidr.toCidrString(),
+        zeroCidr: servicesSubnetCidr.toCidrString(),
         routeTableName: 'natEgress',
         tags: props.serviceSubnetTags,
       },
       public: {
-        zeroCidr: publicCidr.toCidrString(),
+        networkCidr: publicNetworkCidr.toCidrString(),
+        zeroCidr: publicSubnetCidr.toCidrString(),
         routeTableName: 'igwEgress',
         tags: props.publicSubnetTags,
       },
@@ -85,6 +97,13 @@ class AppVpc extends Vpc {
         ...subnetPrototypes,
         ...props.extraSubnetPrototypes,
       };
+    }
+
+    const cidrs: {[key: string]: string} = {};
+
+    for (const key in subnetPrototypes) {
+      const subnetPrototype = subnetPrototypes[key];
+      cidrs[key] = subnetPrototype.networkCidr;
     }
 
     super(scope, id, {
@@ -169,7 +188,12 @@ class AppVpc extends Vpc {
       let ingress: aws.networkAcl.NetworkAclIngress[] | undefined;
 
       if (props.networkAcls) {
-        const aclProps = props.networkAcls[name];
+        const subnetPrototype = subnetPrototypes[name];
+
+        const aclProps = props.networkAcls[name]({
+          thisNetworkCidr: subnetPrototype.networkCidr,
+          cidrs: cidrs,
+        });
         if (aclProps) {
           egress = aclProps.egress;
           ingress = aclProps.ingress;
@@ -199,6 +223,7 @@ class AppVpc extends Vpc {
         subnetIds: this.subnets[SERVICE].map(s => s.id),
         delegatedZones: props.dnsDelegatedZones,
         keyName: props.keyName,
+        iamInstanceProfile: props.iamInstanceProfile,
         tags: props.tags,
         vpcId: this.vpc.id,
       });
@@ -224,4 +249,4 @@ class AppVpc extends Vpc {
   }
 }
 
-export {AppVpc, AppVpcProps};
+export {AppVpc, IAppVpcProps, INetworkCidrProps};

@@ -5,6 +5,7 @@ import {Tags} from '../tags';
 interface TwingateProps {
   domain: string;
   instances: TwingateInstanceProps[];
+  iamInstanceProfile?: string;
   vpcId: string;
   tags: Tags;
 }
@@ -72,6 +73,7 @@ sudo systemctl enable --now twingate-connector
         tags: props.tags.withName(iProps.name).getTags(),
         ami: image.id,
         vpcSecurityGroupIds: [securityGroup.id],
+        iamInstanceProfile: props.iamInstanceProfile,
         lifecycle: {
           preventDestroy: true,
           ignoreChanges: 'all',

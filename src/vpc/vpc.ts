@@ -4,6 +4,7 @@ import {CIDR, createCIDR} from './cidr';
 import {Tags} from '../tags/tags';
 
 interface SubnetPrototypeProps {
+  networkCidr: string;
   zeroCidr: string;
   // If set, will lookup the route table from the standard set
   routeTableName?: string;
