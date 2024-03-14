@@ -23,7 +23,6 @@ interface CloudwatchForwarderProps {
   elasticApiKey?: string;
   username?: string;
   password?: string;
-  applySubscription?: boolean;
   targets: CloudwatchForwarderTargetProps[];
   tags: Tags;
 }
@@ -35,6 +34,7 @@ interface CloudwatchForwarderTargetProps {
 
 interface CloudwatchForwarderSourceProps {
   logGroupName: string;
+  applySubscription: boolean;
   filterPattern: string;
 }
 
@@ -94,7 +94,7 @@ class CloudwatchForwarder extends Construct {
           sourceArn: `arn:aws:logs:${props.region}:${props.accountNumber}:log-group:${source.logGroupName}:*`,
           sourceAccount: props.accountNumber,
         });
-        if(props.applySubscription) {
+        if(source.applySubscription) {
           const sf =
             new aws.cloudwatchLogSubscriptionFilter.CloudwatchLogSubscriptionFilter(
               this,
