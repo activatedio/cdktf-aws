@@ -7,6 +7,7 @@ interface TwingateProps {
   instances: TwingateInstanceProps[];
   iamInstanceProfile?: string;
   vpcId: string;
+  keyName?: string;
   tags: Tags;
 }
 
@@ -74,6 +75,7 @@ sudo systemctl enable --now twingate-connector
         ami: image.id,
         vpcSecurityGroupIds: [securityGroup.id],
         iamInstanceProfile: props.iamInstanceProfile,
+        keyName: props.keyName,
         lifecycle: {
           preventDestroy: true,
           ignoreChanges: 'all',
