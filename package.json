@@ -9,7 +9,7 @@
     "build": "tsc && yarn copy-files",
     "build-windows": "tsc && yarn copy-files-windows",
     "copy-files": "mkdir -p ./build/src/oslogging/lambda-forwarder-aws && cp src/oslogging/lambda-forwarder-aws/* ./build/src/oslogging/lambda-forwarder-aws/ && mkdir -p ./build/src/oslogging/lambda-forwarder-elastic && cp src/oslogging/lambda-forwarder-elastic/* ./build/src/oslogging/lambda-forwarder-elastic/ && mkdir -p ./build/src/oslogging/lambda-forwarder-logstash && cp src/oslogging/lambda-forwarder-logstash/* ./build/src/oslogging/lambda-forwarder-logstash/",
-    "copy-files-windows": "mkdir -p .\\build\\src\\oslogging\\lambda-forwarder-aws && cp src\\oslogging\\lambda-forwarder-aws\\* .\\build\\src\\oslogging\\lambda-forwarder-aws\\ && mkdir -p .\\build\\src\\oslogging\\lambda-forwarder-elastic && cp src\\oslogging\\lambda-forwarder-elastic\\* .\\build\\src\\oslogging\\lambda-forwarder-elastic\\ && mkdir -p .\\build\\src\\oslogging\\lambda-forwarder-logstash && cp src\\oslogging\\lambda-forwarder-logstash\\* .\\build\\src\\oslogging\\lambda-forwarder-logstash\\",
+    "copy-files-windows": "md \".\\build\\src\\oslogging\\lambda-forwarder-aws\" 2>NUL && cp src\\oslogging\\lambda-forwarder-aws\\* .\\build\\src\\oslogging\\lambda-forwarder-aws\\ && md \".\\build\\src\\oslogging\\lambda-forwarder-elastic\" 2>NUL && cp src\\oslogging\\lambda-forwarder-elastic\\* .\\build\\src\\oslogging\\lambda-forwarder-elastic\\ && md \".\\build\\src\\oslogging\\lambda-forwarder-logstash\" 2>NUL && cp src\\oslogging\\lambda-forwarder-logstash\\* .\\build\\src\\oslogging\\lambda-forwarder-logstash\\",
     "test": "jest",
     "test:watch": "jest --watch",
     "lint": "gts lint",
