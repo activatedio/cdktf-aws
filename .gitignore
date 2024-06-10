@@ -6,3 +6,4 @@ tsconfig.tsbuildinfo
 !setup.js
 .idea
 build
+yarn-error.log
