@@ -17,10 +17,12 @@ class CA extends Construct {
 
     this.selfSignedCert = new tls.selfSignedCert.SelfSignedCert(this, 'ssc', {
       privateKeyPem: props.privateKeyPem,
-      subject: {
-        commonName: props.commonName,
-        organization: props.organizatoinName,
-      },
+      subject: [
+        {
+          commonName: props.commonName,
+          organization: props.organizatoinName,
+        },
+      ],
       validityPeriodHours: 87600,
       isCaCertificate: true,
       allowedUses: ['cert_signing', 'crl_signing'],

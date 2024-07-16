@@ -20,10 +20,12 @@ class SignedCert extends Construct {
 
     const cr = new tls.certRequest.CertRequest(this, 'cr', {
       privateKeyPem: props.privateKeyPem,
-      subject: {
-        commonName: props.commonName,
-        organization: props.organizationName,
-      },
+      subject: [
+        {
+          commonName: props.commonName,
+          organization: props.organizationName,
+        },
+      ],
     });
 
     this.cert = new tls.locallySignedCert.LocallySignedCert(this, 'lsc', {

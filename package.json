@@ -33,13 +33,13 @@
   },
   "homepage": "https://github.com/activatedio/cdktf-aws#readme",
   "peerDependencies": {
-    "@cdktf/provider-aws": "^12.0.8",
-    "@cdktf/provider-random": "^4.0.0",
-    "cdktf": "^0.15.5",
+    "@cdktf/provider-aws": "^19.26.0",
+    "@cdktf/provider-random": "^11.0.0",
+    "cdktf": "^0.20.8",
     "constructs": "10.3.0"
   },
   "devDependencies": {
-    "@cdktf/provider-random": "^4.0.0",
+    "@cdktf/provider-random": "^11.0.0",
     "@types/jest": "^29.2.4",
     "@types/node": "^18.11.11",
     "constructs": "10.3.0",
@@ -51,9 +51,9 @@
     "typescript": "^4.9.3"
   },
   "dependencies": {
-    "cdktf": "^0.15.5",
-    "@cdktf/provider-aws": "^12.0.8",
-    "@cdktf/provider-random": "^4.0.0",
-    "@cdktf/provider-tls": "^4.0.0"
+    "@cdktf/provider-aws": "^19.26.0",
+    "@cdktf/provider-random": "^11.0.0",
+    "@cdktf/provider-tls": "^10.0.0",
+    "cdktf": "^0.20.8"
   }
 }
