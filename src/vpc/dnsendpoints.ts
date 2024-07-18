@@ -16,6 +16,7 @@ interface DnsEndpointsProps {
   delegatedZones?: DelegatedZoneProps[];
   clientCidrs: string[];
   keyName?: string;
+  iamInstanceProfile?: string;
   tags: Tags;
 }
 
@@ -161,6 +162,7 @@ systemctl restart bind9
         privateIp: privateIp,
         vpcSecurityGroupIds: [securityGroup.id],
         keyName: props.keyName,
+        iamInstanceProfile: props.iamInstanceProfile,
         tags: props.tags.withName(`${_prefix}ns${i}`).getTags(),
         ami: image.id,
         lifecycle: {

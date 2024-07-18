@@ -6,13 +6,15 @@ interface TwingateProps {
   domain: string;
   instances: TwingateInstanceProps[];
   tags: Tags;
+  iamInstanceProfile?: string;
+  vpcId?: string;
 }
 
 interface TwingateInstanceProps {
   name: string;
   accessToken: string;
   refreshToken: string;
-  subnetId: string;
+  subnetId?: string;
 }
 
 class Twingate extends Construct {
@@ -29,6 +31,42 @@ class Twingate extends Construct {
       ],
       mostRecent: true,
     });
+
+    let vpnSubnetIds: string[] | undefined;
+
+    if (props.vpcId) {
+      vpnSubnetIds = new aws.dataAwsSubnets.DataAwsSubnets(
+        this,
+        'vpnSubentIds',
+        {
+          tags: {
+            class: 'vpn',
+          },
+          filter: [
+            {
+              name: 'vpc-id',
+              values: [props.vpcId],
+            },
+          ],
+        }
+      ).ids;
+    }
+
+    const securityGroup = new aws.securityGroup.SecurityGroup(
+      this,
+      'securityGroup',
+      {
+        vpcId: props.vpcId,
+        egress: [
+          {
+            cidrBlocks: ['0.0.0.0/0'],
+            protocol: '-1',
+            fromPort: 0,
+            toPort: 0,
+          },
+        ],
+      }
+    );
 
     for (let i = 0; i < props.instances.length; i++) {
       const iProps = props.instances[i];
@@ -50,9 +88,13 @@ sudo systemctl enable --now twingate-connector
         userDataReplaceOnChange: true,
         count: 1,
         instanceType: 't3a.micro',
-        subnetId: iProps.subnetId,
+        subnetId: iProps.subnetId
+          ? iProps.subnetId
+          : vpnSubnetIds![i % vpnSubnetIds!.length],
         tags: props.tags.withName(iProps.name).getTags(),
         ami: image.id,
+        iamInstanceProfile: props.iamInstanceProfile,
+        vpcSecurityGroupIds: [securityGroup.id],
         lifecycle: {
           preventDestroy: true,
           ignoreChanges: 'all',
