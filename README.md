@@ -13,7 +13,7 @@ Opinionated moudules for AWS infrastructure.
 * [s3](./src/s3) - S3 buckets
 * [staticwebsite](./src/staticwebsite) - Static websites with S3 and CloudFront
 * [tags](./src/tags) - Tagging support
-* [twingate](./src/twingate) - Twingate deployment
+* [twingate](./src/twingate) - Tailscale deployment
 * [vpc](./src/vpc) - Application vpc setup
 * [zonepair](./src/zonepair) - Public / private zone pair
 

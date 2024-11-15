@@ -10,3 +10,4 @@ export * as dns from './dns';
 export * as oslogging from './oslogging';
 export * as iampolicies from './iampolicies';
 export * as twingate from './twingate';
+export * as tailscale from './tailscale';
