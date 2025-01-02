@@ -82,13 +82,13 @@ function buildSource(message) {
 }
 
 function removeDotNotationFromKeys(obj) {
-  Object.keys(obj).forEach((key) => {
+  Object.keys(obj).forEach(key => {
     const newKeyName = key.replaceAll('.', '_');
-    if(newKeyName !== key) {
+    if (newKeyName !== key) {
       obj[newKeyName] = obj[key];
       delete obj[key];
     }
-    if(typeof obj[newKeyName] === "object") {
+    if (typeof obj[newKeyName] === 'object') {
       removeDotNotationFromKeys(obj[newKeyName]);
     }
   });

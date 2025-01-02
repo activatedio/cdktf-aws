@@ -83,6 +83,18 @@ class StaticWebsite extends Construct {
       }
     );
 
+    const oac =
+      new aws.cloudfrontOriginAccessControl.CloudfrontOriginAccessControl(
+        this,
+        'oacID',
+        {
+          name: id,
+          originAccessControlOriginType: 's3',
+          signingBehavior: 'always',
+          signingProtocol: 'sigv4',
+        }
+      );
+
     this.distribution = new aws.cloudfrontDistribution.CloudfrontDistribution(
       this,
       'distribution',
@@ -118,6 +130,7 @@ class StaticWebsite extends Construct {
           {
             domainName: this.sourceBucket.bucket.bucketRegionalDomainName,
             originId: 'origin1',
+            originAccessControlId: oac.id,
           },
         ],
         priceClass: 'PriceClass_100',
@@ -125,9 +138,6 @@ class StaticWebsite extends Construct {
         comment: `Website: ${id}`,
 
         tags: props.tags.withName(id).getTags(),
-        lifecycle: {
-          ignoreChanges: ['origin'],
-        },
       }
     );
 
