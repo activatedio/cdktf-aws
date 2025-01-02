@@ -4,6 +4,7 @@
   "description": "TypeScript library for CDKTF for AWS",
   "main": "build/src/index.js",
   "types": "build/src/index.d.ts",
+  "files": ["build/*"],
   "scripts": {
     "prepublish": "tsc",
     "build": "tsc && yarn copy-files",
