@@ -1,10 +1,12 @@
 {
   "name": "@activatedio/cdktf-aws",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "TypeScript library for CDKTF for AWS",
   "main": "build/src/index.js",
   "types": "build/src/index.d.ts",
-  "files": ["build/*"],
+  "files": [
+    "build/*"
+  ],
   "scripts": {
     "prepublish": "tsc",
     "build": "tsc && yarn copy-files",
