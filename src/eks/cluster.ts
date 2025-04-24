@@ -25,6 +25,17 @@ interface IFargateProfileProps {
   selectors: IFargateSelectorProps[];
 }
 
+interface IClusterAccessEntry {
+  principalArn: string;
+  policies: IClusterAccessPolicy[];
+}
+
+interface IClusterAccessPolicy {
+  policyArn: string;
+  type: string;
+  namespaces?: string[];
+}
+
 interface ClusterProps {
   region: string;
   name: string;
@@ -34,6 +45,7 @@ interface ClusterProps {
   accessCidrs: string[];
   nodeGroups?: NodeGroupProps[];
   fargateProfiles?: IFargateProfileProps[];
+  accessEntires: IClusterAccessEntry[];
   tags: Tags;
 }
 
@@ -109,8 +121,35 @@ class Cluster extends Construct {
         endpointPublicAccess: false,
         securityGroupIds: [sg.id],
       },
+      accessConfig: {
+        authenticationMode: 'API',
+        bootstrapClusterCreatorAdminPermissions: false,
+      },
       tags: props.tags.getTags(),
       dependsOn: [clusterRole, clusterRoleAttachment],
+    });
+
+    props.accessEntires.forEach((ae, i) => {
+      const entryName = `accessEntry_${i}`;
+      new aws.eksAccessEntry.EksAccessEntry(this, entryName, {
+        clusterName: this.cluster.name,
+        principalArn: ae.principalArn,
+      });
+      ae.policies.forEach((p, j) => {
+        new aws.eksAccessPolicyAssociation.EksAccessPolicyAssociation(
+          this,
+          `${entryName}_policy_${j}`,
+          {
+            clusterName: this.cluster.name,
+            principalArn: ae.principalArn,
+            policyArn: p.policyArn,
+            accessScope: {
+              type: p.type,
+              namespaces: p.namespaces,
+            },
+          }
+        );
+      });
     });
 
     const oidcIssuer = this.cluster.identity.get(0).oidc.get(0).issuer;
@@ -324,4 +363,5 @@ export {
   NodeGroupProps,
   IFargateProfileProps,
   IFargateSelectorProps,
+  IClusterAccessEntry,
 };

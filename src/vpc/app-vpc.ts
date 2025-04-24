@@ -2,7 +2,12 @@ import {Construct} from 'constructs';
 import * as aws from '@cdktf/provider-aws';
 import {Tags} from '../tags';
 import {createCIDR} from './cidr';
-import {SubnetPrototypeProps, Vpc, RouteTablePrototypeProps} from './vpc';
+import {
+  SubnetPrototypeProps,
+  Vpc,
+  RouteTablePrototypeProps,
+  IVPNGatewayProps,
+} from './vpc';
 import {DnsEndpoints, DelegatedZoneProps} from './dnsendpoints';
 
 interface ISubnetAclProps {
@@ -107,6 +112,8 @@ class AppVpc extends Vpc {
       cidrs: cidrs,
     };
 
+    let vgwNames: string[] = [];
+
     super(scope, id, {
       cidr: props.cidr,
       availabilityZones: props.availabilityZones,
@@ -118,7 +125,7 @@ class AppVpc extends Vpc {
           count: 1,
         },
         natEgress: {
-          propagateVGWs: props.createVirtualPrivateGateway,
+          propagateRoutesForVirtualGateways: vgwNames,
         },
         igwEgress: {
           count: 1,
