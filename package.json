@@ -26,6 +26,7 @@
     "url": "git+ssh://git@github.com/activatedio/cdktf-aws.git"
   },
   "keywords": [
+    "AWS",
     "Terraform",
     "CDK"
   ],

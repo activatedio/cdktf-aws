@@ -35,6 +35,8 @@ interface AppVpcProps {
   keyName?: string;
   // "all", "single"
   natGatewayAllocation?: string;
+  // if true, virtual private gateway will be created and natEgress route tables will propogate routes to it
+  createVirtualPrivateGateway?: boolean;
   tags: Tags;
 }
 
@@ -110,11 +112,14 @@ class AppVpc extends Vpc {
       availabilityZones: props.availabilityZones,
       subnetPrototypes,
       tags: props.tags,
+      createVirtualPrivateGateway: props.createVirtualPrivateGateway,
       routeTablePrototypes: {
         noEgress: {
           count: 1,
         },
-        natEgress: {},
+        natEgress: {
+          propagateVGWs: props.createVirtualPrivateGateway,
+        },
         igwEgress: {
           count: 1,
         },

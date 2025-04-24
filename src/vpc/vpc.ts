@@ -14,6 +14,7 @@ interface SubnetPrototypeProps {
 
 interface RouteTablePrototypeProps {
   routes?: aws.routeTable.RouteTableRoute[];
+  propagateVGWs?: boolean;
   count?: number;
 }
 
@@ -22,6 +23,8 @@ interface VpcProps {
   availabilityZones: string[];
   routeTablePrototypes?: {[key: string]: RouteTablePrototypeProps};
   subnetPrototypes: {[key: string]: SubnetPrototypeProps};
+  // true to create a virtual private gateway
+  createVirtualPrivateGateway?: boolean;
   tags: Tags;
 }
 
@@ -45,6 +48,7 @@ interface RouteProps {
 class Vpc extends Construct {
   public vpc: aws.vpc.Vpc;
   public subnets: {[key: string]: aws.subnet.Subnet[]} = {};
+  public readonly virtualPrivateGateway?: aws.vpnGateway.VpnGateway;
   public routeTables: {[key: string]: aws.routeTable.RouteTable[]} = {};
 
   constructor(scope: Construct, id: string, props: VpcProps) {
@@ -56,6 +60,16 @@ class Vpc extends Construct {
       enableDnsSupport: true,
       tags: props.tags.getTags(),
     });
+
+    if (props.createVirtualPrivateGateway) {
+      this.virtualPrivateGateway = new aws.vpnGateway.VpnGateway(
+        this,
+        'vpnGateway',
+        {
+          vpcId: this.vpc.id,
+        }
+      );
+    }
 
     for (const name in props.routeTablePrototypes) {
       const rtProps = props.routeTablePrototypes[name];
@@ -70,6 +84,10 @@ class Vpc extends Construct {
           new aws.routeTable.RouteTable(this, `rt-${name}-${i}`, {
             vpcId: this.vpc.id,
             route: rtProps.routes,
+            propagatingVgws:
+              rtProps.propagateVGWs && this.virtualPrivateGateway
+                ? [this.virtualPrivateGateway.id]
+                : undefined,
             tags: props.tags
               .withTags({
                 class: name,
