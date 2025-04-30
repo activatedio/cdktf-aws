@@ -11,7 +11,7 @@ interface IZonePairProps {
 }
 
 interface IDataZonePairProps {
-  vpcId: string;
+  vpcId: string; //TODO - array for phz sharing
   name: string;
   skipPublic?: boolean;
 }

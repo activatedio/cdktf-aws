@@ -74,8 +74,8 @@ class AppVpc extends Vpc {
 
     // We allow for up to 8 az on a subnet mask of 22 (4) (8 * 4 = 32)
     const dataCidr = _cidr.addOctet(2, 0, 22);
-    const servicesCidr = dataCidr.addOctet(2, 32, 22);
-    const publicCidr = servicesCidr.addOctet(2, 32, 22);
+    const servicesCidr = dataCidr.addOctet(2, 24, 22);
+    const publicCidr = servicesCidr.addOctet(2, 24, 22);
 
     let subnetPrototypes: {[key: string]: SubnetPrototypeProps} = {
       data: {

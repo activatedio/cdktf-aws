@@ -45,7 +45,7 @@ interface ClusterProps {
   accessCidrs: string[];
   nodeGroups?: NodeGroupProps[];
   fargateProfiles?: IFargateProfileProps[];
-  accessEntires: IClusterAccessEntry[];
+  accessEntries: IClusterAccessEntry[];
   tags: Tags;
 }
 
@@ -129,7 +129,7 @@ class Cluster extends Construct {
       dependsOn: [clusterRole, clusterRoleAttachment],
     });
 
-    props.accessEntires.forEach((ae, i) => {
+    props.accessEntries.forEach((ae, i) => {
       const entryName = `accessEntry_${i}`;
       new aws.eksAccessEntry.EksAccessEntry(this, entryName, {
         clusterName: this.cluster.name,
