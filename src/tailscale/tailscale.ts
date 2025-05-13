@@ -59,6 +59,7 @@ class Tailscale extends Construct {
       'securityGroup',
       {
         vpcId: props.vpcId,
+        name: `tailscale-${props.name}`,
         egress: [
           {
             cidrBlocks: ['0.0.0.0/0'],
@@ -75,6 +76,8 @@ class Tailscale extends Construct {
 
       const userData = `#! /bin/bash
 set +e
+hostname ${iProps.name}
+hostnamectl set-hostname ${iProps.name}
 apt-get update
 apt-get upgrade -y
 echo "Starting Tailscale install"
