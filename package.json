@@ -1,6 +1,6 @@
 {
   "name": "@activatedio/cdktf-aws",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "TypeScript library for CDKTF for AWS",
   "main": "build/src/index.js",
   "types": "build/src/index.d.ts",
