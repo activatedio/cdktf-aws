@@ -4,24 +4,11 @@
         {
             "Effect": "Allow",
             "Action": [
-                "iam:CreateServiceLinkedRole"
-            ],
-            "Resource": "*",
-            "Condition": {
-                "StringEquals": {
-                    "iam:AWSServiceName": "elasticloadbalancing.amazonaws.com"
-                }
-            }
-        },
-        {
-            "Effect": "Allow",
-            "Action": [
+                "iam:CreateServiceLinkedRole",
                 "ec2:DescribeAccountAttributes",
                 "ec2:DescribeAddresses",
-                "ec2:DescribeAvailabilityZones",
                 "ec2:DescribeInternetGateways",
                 "ec2:DescribeVpcs",
-                "ec2:DescribeVpcPeeringConnections",
                 "ec2:DescribeSubnets",
                 "ec2:DescribeSecurityGroups",
                 "ec2:DescribeInstances",
@@ -156,20 +143,13 @@
                 "arn:aws:elasticloadbalancing:*:*:targetgroup/*/*",
                 "arn:aws:elasticloadbalancing:*:*:loadbalancer/net/*/*",
                 "arn:aws:elasticloadbalancing:*:*:loadbalancer/app/*/*"
-            ]
-        },
-        {
-            "Effect": "Allow",
-            "Action": [
-                "elasticloadbalancing:AddTags",
-                "elasticloadbalancing:RemoveTags"
             ],
-            "Resource": [
-                "arn:aws:elasticloadbalancing:*:*:listener/net/*/*/*",
-                "arn:aws:elasticloadbalancing:*:*:listener/app/*/*/*",
-                "arn:aws:elasticloadbalancing:*:*:listener-rule/net/*/*/*",
-                "arn:aws:elasticloadbalancing:*:*:listener-rule/app/*/*/*"
-            ]
+            "Condition": {
+                "Null": {
+                    "aws:RequestTag/elbv2.k8s.aws/cluster": "true",
+                    "aws:ResourceTag/elbv2.k8s.aws/cluster": "false"
+                }
+            }
         },
         {
             "Effect": "Allow",
