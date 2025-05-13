@@ -55,7 +55,7 @@
     "typescript": "^4.9.3"
   },
   "dependencies": {
-    "@cdktf/provider-aws": "^19.26.0",
+    "@cdktf/provider-aws": "^19.48.0",
     "@cdktf/provider-random": "^11.0.0",
     "@cdktf/provider-tls": "^10.0.0",
     "cdktf": "^0.20.8"
