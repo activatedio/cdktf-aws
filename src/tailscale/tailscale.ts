@@ -6,6 +6,8 @@ interface TailscaleProps {
   routes: string[];
   name: string;
   authToken: string;
+  acceptRoutes?: boolean;
+  keyName?: string;
   instances: TailscaleInstanceProps[];
   tags: Tags;
   iamInstanceProfile?: string;
@@ -74,6 +76,8 @@ class Tailscale extends Construct {
     for (let i = 0; i < props.instances.length; i++) {
       const iProps = props.instances[i];
 
+      const acceptRoutes = props.acceptRoutes ? ' --accept-routes' : '';
+
       const userData = `#! /bin/bash
 set +e
 hostname ${iProps.name}
@@ -86,20 +90,22 @@ echo 'net.ipv6.conf.all.forwarding = 1' >> /etc/sysctl.d/99-tailscale.conf
 sysctl -p /etc/sysctl.d/99-tailscale.conf
 curl -fsSL https://tailscale.com/install.sh | sh && sudo tailscale up --auth-key=${
         props.authToken
-      } --advertise-exit-node --advertise-routes=${props.routes.join(',')}
+      } --advertise-exit-node${acceptRoutes} --advertise-routes=${props.routes.join(
+        ','
+      )}
 echo "Finished Tailscale install"
 `;
 
       new aws.instance.Instance(this, `instance-${i}`, {
         userData: userData,
         userDataReplaceOnChange: true,
-        count: 1,
         instanceType: 't3a.micro',
         subnetId: iProps.subnetId
           ? iProps.subnetId
           : vpnSubnetIds![i % vpnSubnetIds!.length],
         tags: props.tags.withName(iProps.name).getTags(),
         ami: image.id,
+        keyName: props.keyName,
         iamInstanceProfile: props.iamInstanceProfile,
         vpcSecurityGroupIds: [securityGroup.id],
         lifecycle: {

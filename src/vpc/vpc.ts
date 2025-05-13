@@ -14,7 +14,14 @@ interface SubnetPrototypeProps {
 
 interface RouteTablePrototypeProps {
   routes?: aws.routeTable.RouteTableRoute[];
+  propagateVGWs?: boolean;
   count?: number;
+  propagateRoutesForVirtualGateways?: string[];
+}
+
+interface IVPNGatewayProps {
+  name: string;
+  localAsn: string;
 }
 
 interface VpcProps {
@@ -22,6 +29,7 @@ interface VpcProps {
   availabilityZones: string[];
   routeTablePrototypes?: {[key: string]: RouteTablePrototypeProps};
   subnetPrototypes: {[key: string]: SubnetPrototypeProps};
+  createVirtualPrivateGateway?: boolean;
   tags: Tags;
 }
 
@@ -45,7 +53,9 @@ interface RouteProps {
 class Vpc extends Construct {
   public vpc: aws.vpc.Vpc;
   public subnets: {[key: string]: aws.subnet.Subnet[]} = {};
+  public readonly virtualPrivateGateway?: aws.vpnGateway.VpnGateway;
   public routeTables: {[key: string]: aws.routeTable.RouteTable[]} = {};
+  public vpnGateways: {[key: string]: aws.vpnGateway.VpnGateway} = {};
 
   constructor(scope: Construct, id: string, props: VpcProps) {
     super(scope, id);
@@ -57,6 +67,16 @@ class Vpc extends Construct {
       tags: props.tags.getTags(),
     });
 
+    if (props.createVirtualPrivateGateway) {
+      this.virtualPrivateGateway = new aws.vpnGateway.VpnGateway(
+        this,
+        'vpnGateway',
+        {
+          vpcId: this.vpc.id,
+        }
+      );
+    }
+
     for (const name in props.routeTablePrototypes) {
       const rtProps = props.routeTablePrototypes[name];
       const rtCount = rtProps.count
@@ -64,12 +84,27 @@ class Vpc extends Construct {
         : props.availabilityZones.length;
 
       const routeTables: aws.routeTable.RouteTable[] = [];
+      const propagatingVgws: string[] = [];
+
+      if (rtProps.propagateRoutesForVirtualGateways) {
+        rtProps.propagateRoutesForVirtualGateways.forEach(gwName => {
+          const vgw = this.vpnGateways[gwName];
+          if (!vgw) {
+            throw Error(`virtual gateways ${gwName} not found`);
+          }
+          propagatingVgws.push(vgw.id);
+        });
+      }
 
       for (let i = 0; i < rtCount; i++) {
         routeTables.push(
           new aws.routeTable.RouteTable(this, `rt-${name}-${i}`, {
             vpcId: this.vpc.id,
             route: rtProps.routes,
+            propagatingVgws:
+              rtProps.propagateVGWs && this.virtualPrivateGateway
+                ? [this.virtualPrivateGateway.id]
+                : undefined,
             tags: props.tags
               .withTags({
                 class: name,
@@ -152,4 +187,10 @@ class Vpc extends Construct {
   }
 }
 
-export {Vpc, VpcProps, SubnetPrototypeProps, RouteTablePrototypeProps};
+export {
+  Vpc,
+  VpcProps,
+  SubnetPrototypeProps,
+  RouteTablePrototypeProps,
+  IVPNGatewayProps,
+};
